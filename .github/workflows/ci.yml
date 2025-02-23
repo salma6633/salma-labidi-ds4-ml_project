@@ -9,7 +9,6 @@ on:
       - main
 
 jobs:
-  # 1️⃣ Setup Environment (Install dependencies)
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -19,11 +18,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.10'  # Utilisez une version de Python plus courante
 
       - name: Create and activate virtual environment
         run: |
           python -m venv venv
+          ls -la venv/bin  # Vérifiez si le répertoire venv/bin existe
           source venv/bin/activate
 
       - name: Install dependencies
@@ -32,7 +32,6 @@ jobs:
           pip install -r requirements.txt
           make -f Makefile setup
 
-  # 2️⃣ Lint & Format (Vérification du code)
   lint-format:
     needs: setup
     runs-on: ubuntu-latest
@@ -47,7 +46,6 @@ jobs:
           source venv/bin/activate
           make format
 
-  # 3️⃣ Préparation des données & Entraînement du modèle
   data-train:
     needs: setup
     runs-on: ubuntu-latest
@@ -62,7 +60,6 @@ jobs:
           source venv/bin/activate
           make train
 
-  # 4️⃣ Tests Unitaires
   tests:
     needs: setup
     runs-on: ubuntu-latest
@@ -72,7 +69,6 @@ jobs:
           source venv/bin/activate
           make test
 
-  # 5️⃣ Construction & Push de l'Image Docker
   docker:
     needs: [tests, data-train]
     runs-on: ubuntu-latest
@@ -87,7 +83,6 @@ jobs:
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
           make push-docker
 
-  # 6️⃣ Notification par Email
   notification:
     needs: docker
     runs-on: ubuntu-latest

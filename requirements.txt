@@ -17,4 +17,4 @@ imbalanced-learn
 mypy
 xgboost
 lifelines
-
+shap

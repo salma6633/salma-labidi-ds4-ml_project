@@ -29,6 +29,7 @@ jobs:
           pip install -r requirements.txt
           pip install xgboost  # Installation explicite de xgboost
           pip install lifelines  # Installation explicite de lifelines
+          make -f makefile  # Utiliser `-f` si le nom du fichier est différent
 
   # 2️⃣ Lint & Format (Vérification du code)
   lint-format:

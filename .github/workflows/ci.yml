@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,62 +9,84 @@ on:
       - main
 
 jobs:
-  build:
+  # 1️⃣ Setup Environment (Install dependencies)
+  setup:
     runs-on: ubuntu-latest
-
     steps:
-    # Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # Set up Python environment
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
-    # Install dependencies
-    - name: Install dependencies
-      run: |
-        python -m venv venv
-        . venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install xgboost  # Installation explicite de xgboost au cas où il manque dans requirements.txt
-        pip install lifelines  # Installation explicite de lifelines
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install xgboost  # Installation explicite de xgboost
+          pip install lifelines  # Installation explicite de lifelines
 
+  # 2️⃣ Lint & Format (Vérification du code)
+  lint-format:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Linting with mypy
+        run: make lint
 
-    # Run linting with mypy
-    - name: Run linting
-      run: |
-        . venv/bin/activate
-        mypy --ignore-missing-imports --exclude venv .
+      - name: Formatting check with black
+        run: make format
 
-    # Run formatting check with black
-    - name: Run black formatting check
-      run: |
-        . venv/bin/activate
-        black --check .
+  # 3️⃣ Préparation des données & Entraînement du modèle
+  data-train:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Préparer les données
+        run: make data
 
-    # Run unit tests with pytest
-    - name: Run tests with pytest
-      run: |
-        . venv/bin/activate
-        pytest --maxfail=1 --disable-warnings -q
+      - name: Entraîner le modèle
+        run: make train
 
-    # Build Docker image
-    - name: Build Docker image
-      run: |
-        docker build -t ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} .
+  # 4️⃣ Tests Unitaires
+  tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run unit tests
+        run: make test
 
-    # Push Docker image to Docker Hub
-    - name: Push Docker image
-      run: |
-        echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
-        docker push ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
+  # 5️⃣ Construction & Push de l'Image Docker
+  docker:
+    needs: [tests, data-train]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build Docker image
+        run: make build-docker
 
-    # Optionally, you can deploy or run additional actions if needed
-    # Example: Deploy to a server or Kubernetes cluster
-    # - name: Deploy application
-    #   run: |
-    #     # Add your deployment commands here
+      - name: Push Docker image to Docker Hub
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          make push-docker
+
+  # 6️⃣ Notification par Email
+  notification:
+    needs: [docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "CI/CD Pipeline Status - ${{ job.status }}"
+          body: "Le pipeline GitHub Actions est terminé avec le statut : ${{ job.status }}"
+          to: "tonemail@example.com"
+          from: "github-actions@example.com"
+

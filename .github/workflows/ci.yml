@@ -27,9 +27,9 @@ jobs:
           . venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install xgboost  # Installation explicite de xgboost
-          pip install lifelines  # Installation explicite de lifelines
-          make -f makefile  # Utiliser -f si le fichier s'appelle 'makefile' en minuscule
+          pip install xgboost
+          pip install lifelines
+          make -f Makefile  # Utiliser le nom du fichier Makefile en majuscule
 
   # 2️⃣ Lint & Format (Vérification du code)
   lint-format:

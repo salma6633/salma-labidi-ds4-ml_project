@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -13,32 +13,56 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.x'
+    # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
 
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m venv venv
+        . venv/bin/activate
+        pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Run static analysis with Pylint
-        run: |
-          pylint your_module
+    # Run linting with mypy
+    - name: Run linting
+      run: |
+        . venv/bin/activate
+        mypy --ignore-missing-imports --exclude venv .
 
-      - name: Run tests
-        run: |
-          pytest --maxfail=1 --disable-warnings -q
+    # Run formatting check with black
+    - name: Run black formatting check
+      run: |
+        . venv/bin/activate
+        black --check .
 
-      - name: Build Docker image
-        run: |
-          docker build -t my-image .
+    # Run unit tests with pytest
+    - name: Run tests with pytest
+      run: |
+        . venv/bin/activate
+        pytest --maxfail=1 --disable-warnings -q
 
-      - name: Push Docker image to Docker Hub
-        run: |
-          docker push my-image
+    # Build Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} .
+
+    # Push Docker image to Docker Hub
+    - name: Push Docker image
+      run: |
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker push ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
+
+    # Optionally, you can deploy or run additional actions if needed
+    # Example: Deploy to a server or Kubernetes cluster
+    # - name: Deploy application
+    #   run: |
+    #     # Add your deployment commands here
+

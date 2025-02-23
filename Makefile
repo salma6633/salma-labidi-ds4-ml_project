@@ -43,7 +43,6 @@ train: data
 test:
 	@echo "Exécution des tests unitaires avec pytest..."
 	@pytest --maxfail=1 --disable-warnings -q
-
 deploy:
 	python main.py --run-all --data $(DATA_PATH)  # ✅ Correct (avec double tiret)
 

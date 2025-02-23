@@ -9,6 +9,7 @@ on:
       - main
 
 jobs:
+  # 1️⃣ Installation des dépendances
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -18,71 +19,71 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # Utilisez une version de Python plus courante
-
-      - name: Create and activate virtual environment
-        run: |
-          python -m venv venv
-          ls -la venv/bin  # Vérifiez si le répertoire venv/bin existe
-          source venv/bin/activate
+          python-version: '3.10'  # Version de Python
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          make -f Makefile setup
+          pip install mypy black pytest  # Outils supplémentaires
 
+  # 2️⃣ Linting et formatage du code
   lint-format:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Linting with mypy
-        run: |
-          source venv/bin/activate
-          make lint
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Formatting check with black
-        run: |
-          source venv/bin/activate
-          make format
+      - name: Run linting with mypy
+        run: mypy --ignore-missing-imports .
 
+      - name: Format code with black
+        run: black .
+
+  # 3️⃣ Préparation des données et entraînement du modèle
   data-train:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Préparer les données
-        run: |
-          source venv/bin/activate
-          make data
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Entraîner le modèle
-        run: |
-          source venv/bin/activate
-          make train
+      - name: Prepare data
+        run: python main.py --step prepare --data data_churn.csv
 
+      - name: Train model
+        run: python main.py --step train --data data_churn.csv
+
+  # 4️⃣ Exécution des tests unitaires
   tests:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Run unit tests
-        run: |
-          source venv/bin/activate
-          make test
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      - name: Run unit tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
+  # 5️⃣ Construction et publication de l'image Docker
   docker:
     needs: [tests, data-train]
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Build Docker image
-        run: |
-          source venv/bin/activate
-          make build-docker
+        run: docker build -t salma6633/salma_labidi_4ds4_mlops:latest .
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Push Docker image to Docker Hub
-        run: |
-          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          make push-docker
+        run: docker push salma6633/salma_labidi_4ds4_mlops:latest
 
+  # 6️⃣ Notification par email
   notification:
     needs: docker
     runs-on: ubuntu-latest

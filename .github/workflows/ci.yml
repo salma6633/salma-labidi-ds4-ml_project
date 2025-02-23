@@ -23,12 +23,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          . venv/bin/activate
+          python -m venv venv  # Créer un environnement virtuel
+          . venv/bin/activate  # Activer l'environnement virtuel
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install xgboost lifelines  # Installer des paquets spécifiques
-          make -f Makefile setup  # Assurez-vous que setup est bien une cible dans Makefile
+          make -f Makefile setup  # Exécuter la règle setup définie dans Makefile
 
   # 2️⃣ Lint & Format (Vérification du code)
   lint-format:

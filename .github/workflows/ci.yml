@@ -30,6 +30,7 @@ jobs:
         . venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
+        pip install xgboost  # Installation explicite de xgboost au cas où il manque dans requirements.txt
 
     # Run linting with mypy
     - name: Run linting
@@ -65,4 +66,3 @@ jobs:
     # - name: Deploy application
     #   run: |
     #     # Add your deployment commands here
-

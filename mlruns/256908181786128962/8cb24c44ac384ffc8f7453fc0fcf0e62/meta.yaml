@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/8cb24c44ac384ffc8f7453fc0fcf0e62/artifacts
+end_time: 1739817565544
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 8cb24c44ac384ffc8f7453fc0fcf0e62
+run_name: lucky-panda-719
+run_uuid: 8cb24c44ac384ffc8f7453fc0fcf0e62
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739817545390
+status: 3
+tags: []
+user_id: salma

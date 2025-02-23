@@ -1,0 +1,16 @@
+artifact_uri: /home/salma/salma-labidi-ds4-ml_project/mlruns/622062490656358571/f09ef74d91b846df94ccf31e4e87440d/artifacts
+deleted_time: 1739818230375
+end_time: 1739352420746
+entry_point_name: ''
+experiment_id: '622062490656358571'
+lifecycle_stage: deleted
+run_id: f09ef74d91b846df94ccf31e4e87440d
+run_name: flawless-colt-200
+run_uuid: f09ef74d91b846df94ccf31e4e87440d
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739351537103
+status: 4
+tags: []
+user_id: salma

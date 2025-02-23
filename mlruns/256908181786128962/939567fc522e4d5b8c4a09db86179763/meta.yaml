@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/939567fc522e4d5b8c4a09db86179763/artifacts
+end_time: 1739823580982
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 939567fc522e4d5b8c4a09db86179763
+run_name: clever-falcon-574
+run_uuid: 939567fc522e4d5b8c4a09db86179763
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739823570194
+status: 3
+tags: []
+user_id: salma

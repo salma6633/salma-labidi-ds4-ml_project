@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1739826704182
+current_stage: Staging
+description: null
+last_updated_timestamp: 1739826704197
+name: CustomerChurnModel
+run_id: c801f7154462429abc04c70e97cd507b
+run_link: null
+source: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/c801f7154462429abc04c70e97cd507b/artifacts/customer_churn_model
+status: READY
+status_message: null
+storage_location: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/c801f7154462429abc04c70e97cd507b/artifacts/customer_churn_model
+user_id: null
+version: 24

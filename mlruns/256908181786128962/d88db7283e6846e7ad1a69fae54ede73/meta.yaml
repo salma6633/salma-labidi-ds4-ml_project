@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/d88db7283e6846e7ad1a69fae54ede73/artifacts
+end_time: 1739828453301
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: d88db7283e6846e7ad1a69fae54ede73
+run_name: bold-panda-649
+run_uuid: d88db7283e6846e7ad1a69fae54ede73
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739828444605
+status: 3
+tags: []
+user_id: salma

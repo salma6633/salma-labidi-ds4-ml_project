@@ -1,0 +1,16 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/786396351539913743/762ffb19b9014045841681d33b3aa3a8/artifacts
+deleted_time: 1739818227148
+end_time: 1739353179319
+entry_point_name: ''
+experiment_id: '786396351539913743'
+lifecycle_stage: deleted
+run_id: 762ffb19b9014045841681d33b3aa3a8
+run_name: salty-wren-552
+run_uuid: 762ffb19b9014045841681d33b3aa3a8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739353170856
+status: 3
+tags: []
+user_id: salma

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/502839762642158552/87bdccda0e1b45039e6be30d3a9fa15e/artifacts
+end_time: 1739823080077
+entry_point_name: ''
+experiment_id: '502839762642158552'
+lifecycle_stage: active
+run_id: 87bdccda0e1b45039e6be30d3a9fa15e
+run_name: amusing-hog-331
+run_uuid: 87bdccda0e1b45039e6be30d3a9fa15e
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739823071331
+status: 4
+tags: []
+user_id: salma

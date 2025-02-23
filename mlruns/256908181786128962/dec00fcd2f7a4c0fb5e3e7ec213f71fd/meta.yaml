@@ -1,0 +1,16 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/dec00fcd2f7a4c0fb5e3e7ec213f71fd/artifacts
+deleted_time: 1739826195148
+end_time: 1739826050349
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: deleted
+run_id: dec00fcd2f7a4c0fb5e3e7ec213f71fd
+run_name: bright-panda-876
+run_uuid: dec00fcd2f7a4c0fb5e3e7ec213f71fd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739826035215
+status: 4
+tags: []
+user_id: salma

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/502839762642158552/62d434d56b7c44caa4e041ee91355d28/artifacts
+end_time: 1739822981601
+entry_point_name: ''
+experiment_id: '502839762642158552'
+lifecycle_stage: active
+run_id: 62d434d56b7c44caa4e041ee91355d28
+run_name: gregarious-lamb-655
+run_uuid: 62d434d56b7c44caa4e041ee91355d28
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1739822973677
+status: 4
+tags: []
+user_id: salma

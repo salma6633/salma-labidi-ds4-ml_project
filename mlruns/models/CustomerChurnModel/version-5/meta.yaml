@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1739821574371
+current_stage: None
+description: null
+last_updated_timestamp: 1739821574371
+name: CustomerChurnModel
+run_id: ae17c79f44774ea99ac1c03fdb5dcc0c
+run_link: null
+source: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/ae17c79f44774ea99ac1c03fdb5dcc0c/artifacts/customer_churn_model
+status: READY
+status_message: null
+storage_location: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/ae17c79f44774ea99ac1c03fdb5dcc0c/artifacts/customer_churn_model
+user_id: null
+version: 5

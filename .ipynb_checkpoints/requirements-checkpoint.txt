@@ -18,3 +18,4 @@ mypy
 xgboost
 lifelines
 shap
+elasticsearch

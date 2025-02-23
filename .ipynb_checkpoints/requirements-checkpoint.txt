@@ -1,20 +1,37 @@
-numpy
-pandas
-scikit-learn
-matplotlib
-jupyter
-mlflow
-fastapi
-uvicorn
-joblib
+# Bibliothèques de base
+numpy==1.24.3
+pandas==2.0.3
+scikit-learn==1.3.0
+matplotlib==3.7.2
+seaborn==0.12.2
+
+# Bibliothèques pour le prétraitement des données
+imbalanced-learn==0.10.1
+scipy==1.11.2
+
+# Bibliothèques pour le machine learning
+xgboost==1.7.6
+lifelines==0.27.7
+shap==0.42.1
+
+# Bibliothèques pour l'évaluation des modèles
+mlflow==2.6.0
+joblib==1.3.2
+
+# Bibliothèques pour le déploiement
+fastapi==0.103.1
+uvicorn==0.23.2
 pillow==10.0.0
+
+# Bibliothèques pour le linting et le formatage
+mypy==1.5.1
 black==23.9.1
 flake8==6.0.0
 bandit==1.7.5
+
+# Bibliothèques pour les tests
 pytest==7.4.0
-seaborn
-imbalanced-learn
-mypy
-xgboost
-lifelines
-shap
+
+# Bibliothèques supplémentaires pour Elasticsearch et logging
+elasticsearch==8.9.0
+python-dotenv==1.0.0

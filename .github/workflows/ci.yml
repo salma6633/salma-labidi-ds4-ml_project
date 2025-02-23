@@ -29,7 +29,7 @@ jobs:
           pip install -r requirements.txt
           pip install xgboost  # Installation explicite de xgboost
           pip install lifelines  # Installation explicite de lifelines
-          make -f makefile  # Utiliser `-f` si le nom du fichier est différent
+          make  # Exécution du Makefile sans spécifier le fichier si c'est le fichier par défaut
 
   # 2️⃣ Lint & Format (Vérification du code)
   lint-format:
@@ -37,10 +37,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Linting with mypy
-        run: make lint
+        run: |
+          make lint  # Exécuter la règle lint définie dans le Makefile
 
       - name: Formatting check with black
-        run: make format
+        run: |
+          make format  # Exécuter la règle format définie dans le Makefile
 
   # 3️⃣ Préparation des données & Entraînement du modèle
   data-train:
@@ -48,10 +50,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Préparer les données
-        run: make data
+        run: |
+          make data  # Exécuter la règle data définie dans le Makefile
 
       - name: Entraîner le modèle
-        run: make train
+        run: |
+          make train  # Exécuter la règle train définie dans le Makefile
 
   # 4️⃣ Tests Unitaires
   tests:
@@ -59,7 +63,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run unit tests
-        run: make test
+        run: |
+          make test  # Exécuter la règle test définie dans le Makefile
 
   # 5️⃣ Construction & Push de l'Image Docker
   docker:
@@ -67,12 +72,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build Docker image
-        run: make build-docker
+        run: |
+          make build-docker  # Exécuter la règle build-docker définie dans le Makefile
 
       - name: Push Docker image to Docker Hub
         run: |
           echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
-          make push-docker
+          make push-docker  # Exécuter la règle push-docker définie dans le Makefile
 
   # 6️⃣ Notification par Email
   notification:
@@ -90,4 +96,3 @@ jobs:
           body: "Le pipeline GitHub Actions est terminé avec le statut : ${{ job.status }}"
           to: "tonemail@example.com"
           from: "github-actions@example.com"
-

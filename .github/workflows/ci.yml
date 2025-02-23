@@ -19,15 +19,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.12'  # Assurez-vous que la version de Python est correcte
 
       - name: Install dependencies
         run: |
-          python -m venv venv  # Créer un environnement virtuel
-          . venv/bin/activate  # Activer l'environnement virtuel
           pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install xgboost lifelines  # Installer des paquets spécifiques
+          pip install -r requirements.txt  # Installer les dépendances du fichier requirements.txt
+          pip install xgboost lifelines  # Installer des paquets supplémentaires si nécessaire
           make -f Makefile setup  # Exécuter la règle setup définie dans Makefile
 
   # 2️⃣ Lint & Format (Vérification du code)
@@ -35,50 +33,38 @@ jobs:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Activate virtual environment
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make lint  # Exécuter la règle lint définie dans le Makefile
+      - name: Linting with mypy
+        run: make lint  # Exécuter la règle lint définie dans le Makefile
 
       - name: Formatting check with black
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make format  # Exécuter la règle format définie dans le Makefile
+        run: make format  # Exécuter la règle format définie dans le Makefile
 
   # 3️⃣ Préparation des données & Entraînement du modèle
   data-train:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Activate virtual environment
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make data  # Exécuter la règle data définie dans le Makefile
+      - name: Préparer les données
+        run: make data  # Exécuter la règle data définie dans le Makefile
 
       - name: Entraîner le modèle
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make train  # Exécuter la règle train définie dans le Makefile
+        run: make train  # Exécuter la règle train définie dans le Makefile
 
   # 4️⃣ Tests Unitaires
   tests:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Activate virtual environment
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make test  # Exécuter la règle test définie dans le Makefile
+      - name: Run unit tests
+        run: make test  # Exécuter la règle test définie dans le Makefile
 
   # 5️⃣ Construction & Push de l'Image Docker
   docker:
     needs: [tests, data-train]
     runs-on: ubuntu-latest
     steps:
-      - name: Activate virtual environment
-        run: |
-          . venv/bin/activate  # Activer l'environnement virtuel
-          make build-docker  # Exécuter la règle build-docker définie dans le Makefile
+      - name: Build Docker image
+        run: make build-docker  # Exécuter la règle build-docker définie dans le Makefile
 
       - name: Push Docker image to Docker Hub
         run: |

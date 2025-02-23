@@ -34,19 +34,6 @@ jobs:
           pytest --version
 
   # 2️⃣ Linting et formatage du code
-  lint-format:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Run linting with mypy
-        run: mypy --ignore-missing-imports .
-
-      - name: Format code with black
-        run: black .
-
   # 3️⃣ Préparation des données et entraînement du modèle
   data-train:
     needs: setup

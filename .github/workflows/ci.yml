@@ -1,4 +1,4 @@
-name: Data Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
@@ -9,25 +9,83 @@ on:
       - main
 
 jobs:
-  prepare-data:
+  # 1️⃣ Installation des dépendances
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.8'
+          python-version: '3.12'  # Version de Python
 
       - name: Install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Prepare data
+      - name: Verify installations
         run: |
-          source venv/bin/activate
-          python main.py --step prepare --data data_churn.csv
+          python -c "import pandas as pd; print('pandas version:', pd.__version__)"
+          pytest --version
+
+  # 2️⃣ Préparation des données et entraînement du modèle
+  data-train:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Prepare data
+        run: python main.py --step prepare --data data_churn.csv
+
+      - name: Train model
+        run: python main.py --step train --data data_churn.csv
+
+  # 3️⃣ Exécution des tests unitaires
+  tests:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run unit tests
+        run: pytest --maxfail=1 --disable-warnings -q
+
+  # 4️⃣ Construction et publication de l'image Docker
+  docker:
+    needs: [tests, data-train]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t salma6633/salma_labidi_4ds4_mlops:latest .
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Push Docker image to Docker Hub
+        run: docker push salma6633/salma_labidi_4ds4_mlops:latest
+
+  # 5️⃣ Notification par email
+  notification:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "CI/CD Pipeline Status - ${{ job.status }}"
+          body: "Le pipeline GitHub Actions est terminé avec le statut : ${{ job.status }}"
+          to: "tonemail@example.com"
+          from: "github-actions@example.com"

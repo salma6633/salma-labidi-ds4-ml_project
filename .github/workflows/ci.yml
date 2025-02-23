@@ -29,7 +29,7 @@ jobs:
           pip install -r requirements.txt
           pip install xgboost  # Installation explicite de xgboost
           pip install lifelines  # Installation explicite de lifelines
-          make -f makefile  # Utiliser -f si nécessaire
+          make -f Makefile  # Utilise le nom du fichier Makefile si c'est makefile en minuscule
   # 2️⃣ Lint & Format (Vérification du code)
   lint-format:
     needs: setup

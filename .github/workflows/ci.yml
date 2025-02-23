@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  # 1️⃣ Installation des dépendances
+  # 1️⃣ Setup Environment (Install dependencies)
   setup:
     runs-on: ubuntu-latest
     steps:
@@ -19,62 +19,59 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # Version de Python
+          python-version: '3.12'  # Assurez-vous que la version de Python est correcte
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pandas pytest  # Installation explicite de pandas et pytest
+          pip install --upgrade pip
+          pip install -r requirements.txt  # Installer les dépendances du fichier requirements.txt
+          pip install xgboost lifelines  # Installer des paquets supplémentaires si nécessaire
+          make -f Makefile setup  # Exécuter la règle setup définie dans Makefile
 
-      - name: Verify installations
-        run: |
-          python -c "import pandas as pd; print('pandas version:', pd.__version__)"
-          pytest --version
+  # 2️⃣ Lint & Format (Vérification du code)
+  lint-format:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Linting with mypy
+        run: make lint  # Exécuter la règle lint définie dans le Makefile
 
-  # 2️⃣ Préparation des données et entraînement du modèle
+      - name: Formatting check with black
+        run: make format  # Exécuter la règle format définie dans le Makefile
+
+  # 3️⃣ Préparation des données & Entraînement du modèle
   data-train:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Préparer les données
+        run: make data  # Exécuter la règle data définie dans le Makefile
 
-      - name: Prepare data
-        run: python main.py --step prepare --data data_churn.csv
+      - name: Entraîner le modèle
+        run: make train  # Exécuter la règle train définie dans le Makefile
 
-      - name: Train model
-        run: python main.py --step train --data data_churn.csv
-
-  # 3️⃣ Exécution des tests unitaires
+  # 4️⃣ Tests Unitaires
   tests:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Run unit tests
-        run: pytest --maxfail=1 --disable-warnings -q
+        run: make test  # Exécuter la règle test définie dans le Makefile
 
-  # 4️⃣ Construction et publication de l'image Docker
+  # 5️⃣ Construction & Push de l'Image Docker
   docker:
     needs: [tests, data-train]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Build Docker image
-        run: docker build -t salma6633/salma_labidi_4ds4_mlops:latest .
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: make build-docker  # Exécuter la règle build-docker définie dans le Makefile
 
       - name: Push Docker image to Docker Hub
-        run: docker push salma6633/salma_labidi_4ds4_mlops:latest
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          make push-docker  # Exécuter la règle push-docker définie dans le Makefile
 
-  # 5️⃣ Notification par email
+  # 6️⃣ Notification par Email
   notification:
     needs: docker
     runs-on: ubuntu-latest

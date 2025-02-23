@@ -15,4 +15,6 @@ pytest==7.4.0
 seaborn
 imbalanced-learn
 mypy
+xgboost
+lifelines
 

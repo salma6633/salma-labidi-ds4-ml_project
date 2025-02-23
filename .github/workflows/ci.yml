@@ -75,7 +75,7 @@ jobs:
 
   # 6️⃣ Notification par Email
   notification:
-    needs: [docker]
+    needs: docker
     runs-on: ubuntu-latest
     steps:
       - name: Send Email Notification

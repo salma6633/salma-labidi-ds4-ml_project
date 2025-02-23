@@ -23,7 +23,7 @@ setup:
 # 2. Analyse statique du code avec mypy
 lint:
 	@echo "Vérification statique du code avec mypy..."
-	@mypy --ignore-missing-imports --exclude venv .
+	@mypy --ignore-missing-imports --exclude $(VENV) .
 
 format:
 	@echo "Formatage du code avec black..."

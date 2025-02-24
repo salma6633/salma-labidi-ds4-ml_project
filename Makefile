@@ -58,7 +58,7 @@ notebook:
 	@source $(ENV_NAME)/bin/activate && jupyter notebook
 
 # 9. Exécution complète
-all: setup lint format data train test deploy
+all: setup lint format data train test deploy run-api 
 
 # Démarrage de l'API FastAPI
 run-api:
@@ -68,7 +68,7 @@ run-api:
 # Démarrage de l'interface MLflow
 mlflow-ui:
 	@echo "Démarrage de l'interface MLflow..."
-	@mlflow ui --host 0.0.0.0 --port 5000
+	@mlflow ui --host 0.0.0.0 --port 5000 &
 
 # 10. Construire l'image Docker
 build-docker:
@@ -89,3 +89,14 @@ run-docker:
 clean-docker:
 	@echo "Nettoyage des images et conteneurs Docker..."
 	@docker system prune -f
+# 16. Démarrage de la stack de monitoring (Elasticsearch, Kibana, MLflow)
+monitoring:
+	@echo "Démarrage de la stack de monitoring avec Docker Compose..."
+	@docker compose up -d 
+	@echo "Démarrage de l'interface MLflow..."
+	@mlflow ui --host 0.0.0.0 --port 5000 &
+
+# 17. Arrêt de la stack de monitoring
+stop-monitoring:
+	@echo "Arrêt de la stack de monitoring..."
+	@docker compose down

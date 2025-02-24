@@ -32,9 +32,9 @@ es = Elasticsearch(
     [{"scheme": "http", "host": "localhost", "port": 9200}]
 )  # Ajoute 'scheme' ici
 if es.ping():
-    print("Connexion à Elasticsearch réussie!")
+    print("✅ Connecté à Elasticsearch")
 else:
-    print("La connexion à Elasticsearch a échoué!")
+    print("❌ Impossible de se connecter à Elasticsearch")
 
 # Vérifier si l'index existe et le créer si nécessaire
 index_name = "mlflow-metrics"
@@ -50,11 +50,11 @@ def log_metrics_to_es(metrics):
         if metrics:
             metrics["timestamp"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
             es.index(index=index_name, body=metrics)
-            print("Métriques envoyées à Elasticsearch.")
+            print("✅ Métriques envoyées à Elasticsearch.")
         else:
-            print("Aucune métrique à envoyer.")
+            print("⚠️Aucune métrique à envoyer.")
     except Exception as e:
-        print(f"Erreur lors de l'envoi des métriques vers Elasticsearch : {e}")
+        print(f"❌Erreur lors de l'envoi des métriques vers Elasticsearch : {e}")
 
 
 # Configurer le logger pour capturer les logs

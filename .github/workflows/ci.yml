@@ -1,24 +1,23 @@
-name: CI Pipeline
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
-  build:
+  build-test-deploy:
     runs-on: ubuntu-latest
     services:
       elasticsearch:
-        image: elasticsearch:8.13.2
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
         ports:
           - 9200:9200
         env:
-          discovery.type: single-node  # Ensures single-node setup
-          ES_JAVA_OPTS: "-Xms512m -Xmx512m"  # Limits memory usage
+          discovery.type: single-node
+          ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          xpack.security.enabled: "false"
         options: >-
           --health-cmd "curl -f http://localhost:9200/_cluster/health || exit 1"
           --health-interval 10s
@@ -26,47 +25,58 @@ jobs:
           --health-retries 10
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
       with:
         python-version: '3.12'
 
     - name: Install dependencies
       run: |
         python -m venv venv
-        . venv/bin/activate
+        source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install xgboost lifelines
+        pip install xgboost lifelines pytest black mypy
 
-    # Set Elasticsearch host to localhost for CI environment
+    - name: Run linter (Black)
+      run: |
+        source venv/bin/activate
+        black --check .
+
+    - name: Run static type checking (Mypy)
+      run: |
+        source venv/bin/activate
+        mypy --ignore-missing-imports --exclude venv .
+
+    - name: Run unit tests
+      env:
+        ELASTICSEARCH_HOST: localhost
+      run: |
+        source venv/bin/activate
+        pytest --maxfail=1 --disable-warnings -v
+
     - name: Prepare data
       env:
         ELASTICSEARCH_HOST: localhost
       run: |
-        . venv/bin/activate
+        source venv/bin/activate
         python main.py --step prepare --data data_churn.csv
 
-    # Include other steps (train, test, etc.) similarly if they require Elasticsearch
-    - name: Train the model
+    - name: Train model
       env:
         ELASTICSEARCH_HOST: localhost
       run: |
-        . venv/bin/activate
+        source venv/bin/activate
         python main.py --step train
 
-    # Remaining steps (lint, test, etc.) remain unchanged
-    - name: Run linting
+    - name: Build Docker image
       run: |
-        . venv/bin/activate
-        mypy --ignore-missing-imports --exclude venv .
+        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }} .
 
-    - name: Run tests with pytest
+    - name: Push to Docker Hub
       run: |
-        . venv/bin/activate
-        pytest --maxfail=1 --disable-warnings -q
-
-    # Other steps (Docker build, push, etc.)
+        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+        docker push ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }}

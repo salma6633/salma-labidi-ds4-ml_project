@@ -3,6 +3,8 @@ import argparse
 import model_pipeline as mp
 import mlflow
 import mlflow.sklearn
+import os
+import warnings
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -25,6 +27,12 @@ import time
 from elasticsearch import Elasticsearch
 import logging
 from datetime import datetime
+# Configuration MLflow
+MLFLOW_DIR = os.path.join(os.getcwd(), "mlruns")
+os.makedirs(MLFLOW_DIR, exist_ok=True)
+mlflow.set_tracking_uri(f"file://{MLFLOW_DIR}")
+# Suppression des warnings indésirables
+warnings.filterwarnings("ignore", category=UserWarning, module="mlflow.types.utils")
 
 
 # Connexion à Elasticsearch
@@ -41,6 +49,8 @@ index_name = "mlflow-metrics"
 if not es.indices.exists(index=index_name):
     es.indices.create(index=index_name)
     print(f"L'index '{index_name}' a été créé.")
+
+
 
 
 # Fonction pour envoyer les logs à Elasticsearch
@@ -217,13 +227,13 @@ def main():
 
             # Enregistrer le modèle dans le registre MLflow
             signature = infer_signature(X_train, model.predict(X_train))
-            mlflow.sklearn.log_model(
-                model,
-                "customer_churn_model",
-                input_example=X_test[:5],
-                signature=signature,
-                registered_model_name="CustomerChurnModel",
-            )
+           
+             mlflow.sklearn.log_model(
+            model,
+            "model",
+            registered_model_name="ChurnModel",
+            metadata={"experiment_path": MLFLOW_DIR}
+             )
 
             print("Modèle sauvegardé.")
 

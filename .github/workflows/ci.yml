@@ -41,6 +41,11 @@ jobs:
         pip install -r requirements.txt
         pip install xgboost lifelines pytest black mypy
 
+    - name: Configure MLflow directory
+      run: |
+        mkdir -p mlruns
+        chmod 755 mlruns
+
     - name: Run linter (Black)
       run: |
         source venv/bin/activate
@@ -54,6 +59,7 @@ jobs:
     - name: Run unit tests
       env:
         ELASTICSEARCH_HOST: localhost
+        MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
       run: |
         source venv/bin/activate
         pytest --maxfail=1 --disable-warnings -v
@@ -68,6 +74,7 @@ jobs:
     - name: Train model
       env:
         ELASTICSEARCH_HOST: localhost
+        MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
       run: |
         source venv/bin/activate
         python main.py --step train

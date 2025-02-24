@@ -27,13 +27,14 @@ import time
 from elasticsearch import Elasticsearch
 import logging
 from datetime import datetime
+
 # Configuration MLflow
 MLFLOW_DIR = os.path.join(os.getcwd(), "mlruns")
 os.makedirs(MLFLOW_DIR, exist_ok=True)
 mlflow.set_tracking_uri(f"file://{MLFLOW_DIR}")
+
 # Suppression des warnings indésirables
 warnings.filterwarnings("ignore", category=UserWarning, module="mlflow.types.utils")
-
 
 # Connexion à Elasticsearch
 es = Elasticsearch(
@@ -50,9 +51,6 @@ if not es.indices.exists(index=index_name):
     es.indices.create(index=index_name)
     print(f"L'index '{index_name}' a été créé.")
 
-
-
-
 # Fonction pour envoyer les logs à Elasticsearch
 def log_metrics_to_es(metrics):
     try:
@@ -66,17 +64,14 @@ def log_metrics_to_es(metrics):
     except Exception as e:
         print(f"❌Erreur lors de l'envoi des métriques vers Elasticsearch : {e}")
 
-
 # Configurer le logger pour capturer les logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def generate_random_name():
     adjectives = ["fast", "bright", "lucky", "bold", "clever"]
     animals = ["tiger", "panda", "eagle", "shark", "falcon"]
     return f"{random.choice(adjectives)}-{random.choice(animals)}-{random.randint(100, 999)}"
-
 
 def plot_roc_curve(y_test, y_pred_proba):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
@@ -90,7 +85,6 @@ def plot_roc_curve(y_test, y_pred_proba):
     plt.savefig("roc_curve.png")
     plt.close()
 
-
 def plot_confusion_matrix(y_test, y_pred):
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(8, 6))
@@ -101,7 +95,6 @@ def plot_confusion_matrix(y_test, y_pred):
     plt.ylabel("Véritables")
     plt.savefig("confusion_matrix.png")
     plt.close()
-
 
 def move_model_to_stage_automatically(model_name, accuracy):
     """Promotion automatique du modèle vers un stage basé sur son accuracy."""
@@ -143,9 +136,7 @@ def move_model_to_stage_automatically(model_name, accuracy):
     print(f"Tag 'accuracy' ajouté avec la valeur '{accuracy}'.")
 
     # Attendre quelques secondes pour la synchronisation
-    time.sleep(
-        5
-    )  # Attente de 5 secondes pour permettre à MLflow d'appliquer les changements
+    time.sleep(5)  # Attente de 5 secondes pour permettre à MLflow d'appliquer les changements
 
     # Vérifier si le tag a bien été ajouté
     model_version_metadata = client.get_model_version(model_name, model_version)
@@ -155,9 +146,7 @@ def move_model_to_stage_automatically(model_name, accuracy):
     else:
         print("Le tag 'stage' n'a pas été trouvé.")
 
-
 mlflow.set_experiment("ExperimentFinal")
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -228,12 +217,12 @@ def main():
             # Enregistrer le modèle dans le registre MLflow
             signature = infer_signature(X_train, model.predict(X_train))
            
-             mlflow.sklearn.log_model(
-            model,
-            "model",
-            registered_model_name="ChurnModel",
-            metadata={"experiment_path": MLFLOW_DIR}
-             )
+            mlflow.sklearn.log_model(
+                model,
+                "model",
+                registered_model_name="ChurnModel",
+                metadata={"experiment_path": MLFLOW_DIR}
+            )
 
             print("Modèle sauvegardé.")
 
@@ -329,7 +318,6 @@ def main():
         print("Déplacement du modèle vers Production...")
         move_model_to_stage(model_name, "production")
         print(f"Modèle {model_name} déplacé vers Production avec le tag.")
-
 
 if __name__ == "__main__":
     main()

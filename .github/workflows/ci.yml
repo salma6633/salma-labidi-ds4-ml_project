@@ -52,16 +52,17 @@ jobs:
 
     - name: Check Elasticsearch connection
       run: |
-        curl -X GET "${{ env.ELASTICSEARCH_HOST }}:9200"
+        curl -X GET "http://localhost:9200"
 
     - name: Create mlflow-metrics index
       run: |
-        curl -X PUT "${{ env.ELASTICSEARCH_HOST }}:9200/mlflow-metrics"
+        curl -X PUT "http://localhost:9200/mlflow-metrics"
 
     - name: Start MLflow server
       run: |
         source venv/bin/activate
         mlflow ui --host 0.0.0.0 --port 5000 &
+        sleep 10  # Attendre que le serveur démarre
 
     - name: Check MLflow server status
       run: |
@@ -79,7 +80,6 @@ jobs:
 
     - name: Run unit tests
       env:
-        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
@@ -94,8 +94,8 @@ jobs:
 
     - name: Train model
       env:
-        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
       run: |
         source venv/bin/activate
         python main.py --step train --data data_churn.csv
@@ -109,7 +109,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: model
-        path: customer_churn_model.pkl  # Assurez-vous que c'est le bon nom de fichier
+        path: customer_churn_model.pkl
 
     - name: Load model
       run: |
@@ -118,8 +118,17 @@ jobs:
 
     - name: Evaluate model
       env:
-        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
       run: |
         source venv/bin/activate
         python main.py --step evaluate --data data_churn.csv
+
+    - name: Check MLflow logs
+      run: |
+        cat mlruns/0/meta.yaml
+        cat mlruns/0/*/meta.yaml
+
+    - name: Check Python logs
+      run: |
+        cat *.log

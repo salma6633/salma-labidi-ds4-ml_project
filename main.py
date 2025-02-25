@@ -98,7 +98,7 @@ def log_model_to_mlflow(model, X_train, X_test, model_name="CustomerChurnModel")
     signature = infer_signature(X_train, model.predict(X_train))
     mlflow.sklearn.log_model(
         model,
-        "customer_churn_model",
+        "CustomerChurnModel",
         input_example=X_test[:5],
         signature=signature,
         registered_model_name=model_name,
@@ -189,6 +189,49 @@ def promote_model(model_name, stage, accuracy):
         print("\033[91mLe tag 'accuracy' n'a pas été trouvé.\033[0m")
 
 
+# Fonction pour sauvegarder le modèle
+def save_model(model, filepath="customer_churn_model.pkl"):
+    """
+    Sauvegarde le modèle entraîné dans un fichier.
+
+    Args:
+        model: Le modèle entraîné.
+        filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
+    """
+    import joblib
+
+    joblib.dump(model, filepath)
+    logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
+
+
+# Fonction pour charger le modèle
+def load_model(filepath="customer_churn_model.pkl"):
+    """
+    Charge un modèle sauvegardé à partir d'un fichier.
+
+    Args:
+        filepath (str): Chemin vers le fichier du modèle.
+
+    Returns:
+        model: Le modèle chargé.
+    """
+    import joblib
+
+    model = joblib.load(filepath)
+    logger.info(f"Modèle chargé avec succès depuis {filepath}.")
+    return model
+
+
+# Fonction pour déplacer automatiquement le modèle vers un stage
+def move_model_to_stage_automatically(model_name, accuracy):
+    if accuracy > 0.95:
+        promote_model(model_name, "Production", accuracy)
+    elif accuracy > 0.90:
+        promote_model(model_name, "Staging", accuracy)
+    else:
+        promote_model(model_name, "Archived", accuracy)
+
+
 # Fonction principale
 def main():
     parser = argparse.ArgumentParser(
@@ -226,19 +269,94 @@ def main():
             mlflow.log_params(model.get_params())
             print("\033[92mEntraînement terminé.\033[0m")
 
+            # Sauvegarder le modèle
+            save_model(model)
+
             metrics = evaluate_model(model, X_test, y_test)
             log_model_to_mlflow(model, X_train, X_test)
 
             # Promotion automatique vers le stage en fonction de l'accuracy
-            accuracy = metrics["accuracy"]
-            if accuracy > 0.95:
-                promote_model("CustomerChurnModel", "Production", accuracy)
-            elif accuracy > 0.90:
-                promote_model("CustomerChurnModel", "Staging", accuracy)
-            else:
-                promote_model("CustomerChurnModel", "Archived", accuracy)
+            move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
-    # ... (autres étapes comme prepare, train, evaluate, etc.)
+    elif args.step == "prepare":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step prepare'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Sauvegarder les données préparées
+        with open("customer_churn_model.pkl", "wb") as f:
+            pickle.dump((X_train, X_test, y_train, y_test), f)
+        print(
+            "\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m"
+        )
+
+    elif args.step == "train":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step train'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        print("\033[94mEntraînement du modèle...\033[0m")
+        model = mp.train_model(X_train, y_train)
+        print("\033[92mEntraînement terminé.\033[0m")
+
+        # Sauvegarder le modèle
+        save_model(model)
+
+    elif args.step == "evaluate":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step evaluate'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+        # Démarrer un run MLflow
+        with mlflow.start_run(run_name="evaluate_run"):
+            # Évaluer le modèle
+            metrics = evaluate_model(model, X_test, y_test)
+
+    elif args.step == "save":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step save'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        print("\033[94mEntraînement du modèle...\033[0m")
+        model = mp.train_model(X_train, y_train)
+        print("\033[92mEntraînement terminé.\033[0m")
+
+        # Sauvegarder le modèle
+        save_model(model)
+
+    elif args.step == "load":
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+    else:
+        print(
+            "\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m"
+        )
 
 
 if __name__ == "__main__":

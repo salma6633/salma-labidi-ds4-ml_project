@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/f8d62a5b5dc64596884e834d1aa65e2a/artifacts
+end_time: 1740512281620
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: f8d62a5b5dc64596884e834d1aa65e2a
+run_name: lucky-tiger-520
+run_uuid: f8d62a5b5dc64596884e834d1aa65e2a
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740512265143
+status: 3
+tags: []
+user_id: salma

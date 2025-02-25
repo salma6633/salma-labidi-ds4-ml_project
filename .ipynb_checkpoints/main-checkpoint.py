@@ -43,6 +43,7 @@ if not es.indices.exists(index=index_name):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 # Fonction pour envoyer les logs à Elasticsearch
 def log_metrics_to_es(metrics):
     try:
@@ -53,13 +54,17 @@ def log_metrics_to_es(metrics):
         else:
             print("\033[91mAucune métrique à envoyer.\033[0m")
     except Exception as e:
-        print(f"\033[91mErreur lors de l'envoi des métriques vers Elasticsearch : {e}\033[0m")
+        print(
+            f"\033[91mErreur lors de l'envoi des métriques vers Elasticsearch : {e}\033[0m"
+        )
+
 
 # Fonction pour générer un nom aléatoire
 def generate_random_name():
     adjectives = ["fast", "bright", "lucky", "bold", "clever"]
     animals = ["tiger", "panda", "eagle", "shark", "falcon"]
     return f"{random.choice(adjectives)}-{random.choice(animals)}-{random.randint(100, 999)}"
+
 
 # Fonction pour tracer la courbe ROC
 def plot_roc_curve(y_test, y_pred_proba):
@@ -74,6 +79,7 @@ def plot_roc_curve(y_test, y_pred_proba):
     plt.savefig("roc_curve.png")
     plt.close()
 
+
 # Fonction pour tracer la matrice de confusion
 def plot_confusion_matrix(y_test, y_pred):
     cm = confusion_matrix(y_test, y_pred)
@@ -86,17 +92,19 @@ def plot_confusion_matrix(y_test, y_pred):
     plt.savefig("confusion_matrix.png")
     plt.close()
 
+
 # Fonction pour enregistrer le modèle dans MLflow
 def log_model_to_mlflow(model, X_train, X_test, model_name="CustomerChurnModel"):
     signature = infer_signature(X_train, model.predict(X_train))
     mlflow.sklearn.log_model(
         model,
-        "customer_churn_model",
+        "CustomerChurnModel",
         input_example=X_test[:5],
         signature=signature,
         registered_model_name=model_name,
     )
     print("\033[92mModèle sauvegardé dans MLflow.\033[0m")
+
 
 # Fonction pour évaluer le modèle
 def evaluate_model(model, X_test, y_test):
@@ -129,13 +137,16 @@ def evaluate_model(model, X_test, y_test):
 
     return metrics
 
+
 # Fonction pour promouvoir le modèle vers un stage
 def promote_model(model_name, stage, accuracy):
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
 
     if len(model_versions) == 0:
-        raise ValueError(f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m")
+        raise ValueError(
+            f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m"
+        )
 
     model_version = model_versions[0].version
 
@@ -143,7 +154,9 @@ def promote_model(model_name, stage, accuracy):
     client.transition_model_version_stage(
         name=model_name, version=model_version, stage=stage
     )
-    print(f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m")
+    print(
+        f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m"
+    )
 
     # Ajouter un tag pour indiquer le stage
     client.set_model_version_tag(
@@ -169,9 +182,53 @@ def promote_model(model_name, stage, accuracy):
         print("\033[91mLe tag 'stage' n'a pas été trouvé.\033[0m")
 
     if "accuracy" in tags:
-        print(f"\033[92mTag 'accuracy' trouvé avec la valeur : {tags['accuracy']}\033[0m")
+        print(
+            f"\033[92mTag 'accuracy' trouvé avec la valeur : {tags['accuracy']}\033[0m"
+        )
     else:
         print("\033[91mLe tag 'accuracy' n'a pas été trouvé.\033[0m")
+
+
+# Fonction pour sauvegarder le modèle
+def save_model(model, filepath="customer_churn_model.pkl"):
+    """
+    Sauvegarde le modèle entraîné dans un fichier.
+
+    Args:
+        model: Le modèle entraîné.
+        filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
+    """
+    import joblib
+    joblib.dump(model, filepath)
+    logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
+
+
+# Fonction pour charger le modèle
+def load_model(filepath="customer_churn_model.pkl"):
+    """
+    Charge un modèle sauvegardé à partir d'un fichier.
+
+    Args:
+        filepath (str): Chemin vers le fichier du modèle.
+
+    Returns:
+        model: Le modèle chargé.
+    """
+    import joblib
+    model = joblib.load(filepath)
+    logger.info(f"Modèle chargé avec succès depuis {filepath}.")
+    return model
+
+
+# Fonction pour déplacer automatiquement le modèle vers un stage
+def move_model_to_stage_automatically(model_name, accuracy):
+    if accuracy > 0.95:
+        promote_model(model_name, "Production", accuracy)
+    elif accuracy > 0.90:
+        promote_model(model_name, "Staging", accuracy)
+    else:
+        promote_model(model_name, "Archived", accuracy)
+
 
 # Fonction principale
 def main():
@@ -210,19 +267,91 @@ def main():
             mlflow.log_params(model.get_params())
             print("\033[92mEntraînement terminé.\033[0m")
 
+            # Sauvegarder le modèle
+            save_model(model)
+
             metrics = evaluate_model(model, X_test, y_test)
             log_model_to_mlflow(model, X_train, X_test)
 
             # Promotion automatique vers le stage en fonction de l'accuracy
-            accuracy = metrics["accuracy"]
-            if accuracy > 0.95:
-                promote_model("CustomerChurnModel", "Production", accuracy)
-            elif accuracy > 0.90:
-                promote_model("CustomerChurnModel", "Staging", accuracy)
-            else:
-                promote_model("CustomerChurnModel", "Archived", accuracy)
+            move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
-    # ... (autres étapes comme prepare, train, evaluate, etc.)
+    elif args.step == "prepare":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step prepare'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Sauvegarder les données préparées
+        with open("customer_churn_model.pkl", "wb") as f:
+            pickle.dump((X_train, X_test, y_train, y_test), f)
+        print("\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m")
+
+    elif args.step == "train":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step train'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        print("\033[94mEntraînement du modèle...\033[0m")
+        model = mp.train_model(X_train, y_train)
+        print("\033[92mEntraînement terminé.\033[0m")
+
+        # Sauvegarder le modèle
+        save_model(model)
+
+    elif args.step == "evaluate":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step evaluate'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+        # Démarrer un run MLflow
+        with mlflow.start_run(run_name="evaluate_run"):
+            # Évaluer le modèle
+            metrics = evaluate_model(model, X_test, y_test)
+
+    elif args.step == "save":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step save'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        print("\033[94mEntraînement du modèle...\033[0m")
+        model = mp.train_model(X_train, y_train)
+        print("\033[92mEntraînement terminé.\033[0m")
+
+        # Sauvegarder le modèle
+        save_model(model)
+
+    elif args.step == "load":
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+    else:
+        print("\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m")
+
 
 if __name__ == "__main__":
     main()

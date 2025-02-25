@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  MODEL_NAME: "CustomerChurnModel"  # Consistent model name
+  MLFLOW_TRACKING_URI: "http://localhost:5000"
+  ELASTICSEARCH_HOST: "localhost"
+
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
@@ -23,6 +28,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -38,95 +44,84 @@ jobs:
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install xgboost lifelines pytest black mypy
+        pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
+
     - name: Clean MLflow directory
       run: |
         rm -rf mlruns/*
-    - name: Configure MLflow directory
-      run: |
         mkdir -p mlruns
         chmod 755 mlruns
-        ls -l mlruns
+
     - name: Check Elasticsearch connection
       run: |
-        curl -X GET "localhost:9200"
+        curl -X GET "${{ env.ELASTICSEARCH_HOST }}:9200"
+
     - name: Create mlflow-metrics index
       run: |
-        curl -X PUT "localhost:9200/mlflow-metrics"
+        curl -X PUT "${{ env.ELASTICSEARCH_HOST }}:9200/mlflow-metrics"
+
     - name: Start MLflow server
       run: |
         source venv/bin/activate
         mlflow ui --host 0.0.0.0 --port 5000 &
+
     - name: Check MLflow server status
       run: |
         curl -I http://localhost:5000
+
     - name: Run linter (Black)
       run: |
         source venv/bin/activate
         black --check .
+
     - name: Run static type checking (Mypy)
       run: |
         source venv/bin/activate
         mypy --ignore-missing-imports --exclude venv .
+
     - name: Run unit tests
       env:
-        ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: http://localhost:5000
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
         pytest --maxfail=1 --disable-warnings -v
+
     - name: Prepare data
       env:
-        ELASTICSEARCH_HOST: localhost
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
       run: |
         source venv/bin/activate
         python main.py --step prepare --data data_churn.csv
+
     - name: Train model
       env:
-        ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: http://localhost:5000
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step train
+        python main.py --step train --model-name "${{ env.MODEL_NAME }}"
+
     - name: Save model
       run: |
         source venv/bin/activate
-        python -c "from main import save_model; save_model(model, 'model.joblib')"
+        python -c "from main import save_model; save_model(model, '${{ env.MODEL_NAME }}.joblib')"
+
     - name: Upload model artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Updated to v4
       with:
         name: model
-        path: model.joblib
+        path: ${{ env.MODEL_NAME }}.joblib
 
     - name: Evaluate model
       env:
-        ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: http://localhost:5000
+        ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step evaluate
-    - name: Load and validate model
-      run: |
-        source venv/bin/activate
-        python -c "from main import load_model; model = load_model('model.joblib'); print('Model loaded successfully!')"
-    - name: Save model
-      run: |
-        source venv/bin/activate
-        python -c "from main import save_model; save_model(model, 'model.joblib')"
-    - name: Upload model artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: model
-        path: model.joblib
+        python main.py --step evaluate --model-name "${{ env.MODEL_NAME }}"
 
-    - name: Evaluate model
-      env:
-        ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: http://localhost:5000
-      run: |
-        source venv/bin/activate
-        python main.py --step evaluate
     - name: Load and validate model
       run: |
         source venv/bin/activate
-        python -c "from main import load_model; model = load_model('model.joblib'); print('Model loaded successfully!')"
+        python -c "from main import load_model; model = load_model('${{ env.MODEL_NAME }}.joblib'); print('Model loaded successfully!')"

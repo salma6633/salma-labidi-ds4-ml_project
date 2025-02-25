@@ -199,7 +199,6 @@ def save_model(model, filepath="customer_churn_model.pkl"):
         filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
     """
     import joblib
-
     joblib.dump(model, filepath)
     logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
 
@@ -216,7 +215,6 @@ def load_model(filepath="customer_churn_model.pkl"):
         model: Le modèle chargé.
     """
     import joblib
-
     model = joblib.load(filepath)
     logger.info(f"Modèle chargé avec succès depuis {filepath}.")
     return model
@@ -240,7 +238,7 @@ def main():
     parser.add_argument(
         "--step",
         type=str,
-        help="Étape à exécuter: prepare, train, evaluate, save, load, staging, production",
+        help="Étape à exécuter: prepare, train, evaluate, save, load, log_model, promote",
     )
     parser.add_argument("--data", type=str, help="Chemin du fichier de données")
     parser.add_argument(
@@ -291,9 +289,7 @@ def main():
         # Sauvegarder les données préparées
         with open("customer_churn_model.pkl", "wb") as f:
             pickle.dump((X_train, X_test, y_train, y_test), f)
-        print(
-            "\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m"
-        )
+        print("\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m")
 
     elif args.step == "train":
         if not args.data:
@@ -353,10 +349,46 @@ def main():
         model = load_model()
         print("\033[92mModèle chargé avec succès.\033[0m")
 
+    elif args.step == "log_model":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step log_model'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+        # Enregistrer le modèle dans MLflow
+        with mlflow.start_run(run_name="log_model_run"):
+            log_model_to_mlflow(model, X_train, X_test)
+
+    elif args.step == "promote":
+        if not args.data:
+            raise ValueError(
+                "\033[91mLe chemin du fichier de données est requis pour '--step promote'.\033[0m"
+            )
+
+        print("\033[94mPréparation des données...\033[0m")
+        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
+        print("\033[92mPréparation terminée.\033[0m")
+
+        # Charger le modèle
+        model = load_model()
+        print("\033[92mModèle chargé avec succès.\033[0m")
+
+        # Évaluer le modèle
+        metrics = evaluate_model(model, X_test, y_test)
+
+        # Promouvoir le modèle
+        move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
+
     else:
-        print(
-            "\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m"
-        )
+        print("\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m")
 
 
 if __name__ == "__main__":

@@ -98,7 +98,7 @@ jobs:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step train
+        python main.py --step train --data data_churn.csv
 
     - name: Save model
       run: |

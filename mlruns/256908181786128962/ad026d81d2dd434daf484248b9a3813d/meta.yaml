@@ -1,8 +1,9 @@
 artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/ad026d81d2dd434daf484248b9a3813d/artifacts
+deleted_time: 1740512691159
 end_time: 1740512507971
 entry_point_name: ''
 experiment_id: '256908181786128962'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: ad026d81d2dd434daf484248b9a3813d
 run_name: evaluate_run
 run_uuid: ad026d81d2dd434daf484248b9a3813d

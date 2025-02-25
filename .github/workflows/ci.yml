@@ -7,7 +7,6 @@ on:
     branches: [ main ]
 
 env:
-  MODEL_NAME: "CustomerChurnModel"  # Consistent model name
   MLFLOW_TRACKING_URI: "http://localhost:5000"
   ELASTICSEARCH_HOST: "localhost"
 
@@ -100,18 +99,18 @@ jobs:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step train --model-name "${{ env.MODEL_NAME }}"
+        python main.py --step train
 
     - name: Save model
       run: |
         source venv/bin/activate
-        python -c "from main import save_model; save_model(model, '${{ env.MODEL_NAME }}.joblib')"
+        python -c "from main import save_model; save_model(model, 'CustomerChurnModel.joblib')"
 
     - name: Upload model artifact
-      uses: actions/upload-artifact@v4  # Updated to v4
+      uses: actions/upload-artifact@v4
       with:
         name: model
-        path: ${{ env.MODEL_NAME }}.joblib
+        path: CustomerChurnModel.joblib
 
     - name: Evaluate model
       env:
@@ -119,9 +118,9 @@ jobs:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step evaluate --model-name "${{ env.MODEL_NAME }}"
+        python main.py --step evaluate
 
     - name: Load and validate model
       run: |
         source venv/bin/activate
-        python -c "from main import load_model; model = load_model('${{ env.MODEL_NAME }}.joblib'); print('Model loaded successfully!')"
+        python -c "from main import load_model; model = load_model('CustomerChurnModel.joblib'); print('Model loaded successfully!')"

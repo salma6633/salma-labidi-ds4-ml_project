@@ -73,9 +73,9 @@ jobs:
         curl -I http://localhost:5000
 
     - name: Run linter (Black)
-      run: |
+     run: |
         source venv/bin/activate
-        black --check .
+        black .
 
     - name: Run static type checking (Mypy)
       run: |

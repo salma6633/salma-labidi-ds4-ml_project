@@ -147,7 +147,9 @@ def promote_model(model_name, stage, accuracy):
     # Trouver la dernière version du modèle
     model_versions = client.search_model_versions(f"name='{model_name}'")
     if len(model_versions) == 0:
-        raise ValueError(f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m")
+        raise ValueError(
+            f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m"
+        )
 
     model_version = model_versions[0].version
 
@@ -157,7 +159,9 @@ def promote_model(model_name, stage, accuracy):
         version=model_version,
         stage=stage,
     )
-    print(f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m")
+    print(
+        f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m"
+    )
 
     # Ajouter des tags pour le stage et l'accuracy
     client.set_model_version_tag(
@@ -185,6 +189,7 @@ def save_model(model, filepath="customer_churn_model.pkl"):
         filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
     """
     import joblib
+
     joblib.dump(model, filepath)
     logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
 
@@ -201,6 +206,7 @@ def load_model(filepath="customer_churn_model.pkl"):
         model: Le modèle chargé.
     """
     import joblib
+
     model = joblib.load(filepath)
     logger.info(f"Modèle chargé avec succès depuis {filepath}.")
     return model
@@ -276,7 +282,9 @@ def main():
         # Sauvegarder les données préparées
         with open("customer_churn_model.pkl", "wb") as f:
             pickle.dump((X_train, X_test, y_train, y_test), f)
-        print("\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m")
+        print(
+            "\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m"
+        )
 
     elif args.step == "train":
         if not args.data:
@@ -375,7 +383,9 @@ def main():
         move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
     else:
-        print("\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m")
+        print(
+            "\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m"
+        )
 
 
 if __name__ == "__main__":

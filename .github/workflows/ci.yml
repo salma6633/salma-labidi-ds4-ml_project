@@ -38,17 +38,13 @@ jobs:
         source venv/bin/activate
         pip install --upgrade pip
         pip install -r requirements.txt
-        pip install xgboost lifelines pytest black mypy
+        pip install xgboost lifelines pytest black mypy joblib
 
     - name: Clean MLflow directory
       run: |
         rm -rf mlruns/*
-
-    - name: Configure MLflow directory
-      run: |
         mkdir -p mlruns
         chmod 755 mlruns
-        ls -l mlruns
 
     - name: Check Elasticsearch connection
       run: |
@@ -100,6 +96,17 @@ jobs:
         source venv/bin/activate
         python main.py --step train
 
+    - name: Save model
+      run: |
+        source venv/bin/activate
+        python -c "from main import save_model; save_model(model, 'model.joblib')"
+
+    - name: Upload model artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: model
+        path: model.joblib
+
     - name: Evaluate model
       env:
         ELASTICSEARCH_HOST: localhost
@@ -108,3 +115,7 @@ jobs:
         source venv/bin/activate
         python main.py --step evaluate
 
+    - name: Load and validate model
+      run: |
+        source venv/bin/activate
+        python -c "from main import load_model; model = load_model('model.joblib'); print('Model loaded successfully!')"

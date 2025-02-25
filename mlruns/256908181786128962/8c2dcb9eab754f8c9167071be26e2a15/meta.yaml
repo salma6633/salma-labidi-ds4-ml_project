@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/8c2dcb9eab754f8c9167071be26e2a15/artifacts
+end_time: 1740418333587
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 8c2dcb9eab754f8c9167071be26e2a15
+run_name: bold-shark-294
+run_uuid: 8c2dcb9eab754f8c9167071be26e2a15
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740418320303
+status: 3
+tags: []
+user_id: salma

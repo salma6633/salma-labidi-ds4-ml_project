@@ -1,66 +1,40 @@
-# Imports :
+# Imports
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.tree import plot_tree
 from scipy.optimize import minimize
+from sklearn.cluster import KMeans
 
-# Imports for encoding categorical features
+# Encodage des variables catégorielles
 from sklearn.preprocessing import LabelEncoder
 
-# Imports for splitting
+# Division des données
 from sklearn.model_selection import train_test_split
 
-# Imports for Standarization
+# Normalisation des données
 from sklearn.preprocessing import StandardScaler
 
-# Imports for Class Imbalance
+# Gestion du déséquilibre des classes
 from imblearn.over_sampling import SMOTE
-from imblearn.under_sampling import EditedNearestNeighbours
 
-# Imports for Modeling
-from sklearn.decomposition import PCA
-from sklearn.linear_model import LogisticRegression
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.cluster import KMeans
-from scipy.stats import mode
-import xgboost as xgb
-from lifelines import CoxPHFitter
-from lifelines.utils import concordance_index
-
-# Imports of hyperparameters
-from sklearn.model_selection import GridSearchCV
-
-# Imports for evaluation
-import shap
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import (
-    classification_report,
-    roc_auc_score,
-    confusion_matrix,
-    ConfusionMatrixDisplay,
-    roc_curve,
-    auc,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
-    precision_recall_curve,
-)
-
-# Imports for deployment
-import joblib
-from joblib import dump, load
-from flask import Flask, request, jsonify
-from PIL import Image
+# Modélisation
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import RandomizedSearchCV
+
+# Évaluation
+from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+
+# Sauvegarde et chargement des modèles
+import joblib
+
+# Logging
+import logging
+
+# Configuration du logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def prepare_data(data_path):
@@ -74,10 +48,11 @@ def prepare_data(data_path):
     Returns:
         X_train_scaled_smote, X_test_scaled_smote, y_train_smote, y_test_smote: Les données préparées.
     """
-    # Charger le fichier data_churn.csv
+    logger.info("Chargement des données...")
     df = pd.read_csv(data_path)
 
     # Traitement des outliers
+    logger.info("Traitement des outliers...")
     columns_outliers = ["Total eve calls", "Total day calls", "Total intl calls"]
     for column in columns_outliers:
         Q1 = df[column].quantile(0.25)
@@ -92,16 +67,18 @@ def prepare_data(data_path):
     sns.boxplot(data=df.drop(columns=["Churn"]), whis=3)
     plt.title("Boxplot after handling outliers")
     plt.xticks(rotation=45)
-    plt.savefig("boxplot_outliers.png")  # Sauvegarde le graphique
+    plt.savefig("boxplot_outliers.png")
     plt.close()
 
     # Encodage des variables catégorielles
+    logger.info("Encodage des variables catégorielles...")
     label_encoder = LabelEncoder()
     df["International plan"] = label_encoder.fit_transform(df["International plan"])
     df["Voice mail plan"] = label_encoder.fit_transform(df["Voice mail plan"])
     df["Churn"] = label_encoder.fit_transform(df["Churn"])
 
     # Clustering des états par taux de churn
+    logger.info("Clustering des états par taux de churn...")
     state_churn_rate = df.groupby("State")["Churn"].mean().reset_index()
     state_churn_rate.rename(columns={"Churn": "Churn_Rate"}, inplace=True)
     X = state_churn_rate[["Churn_Rate"]].values
@@ -129,7 +106,7 @@ def prepare_data(data_path):
     plt.title("Churn Rate Clusters")
     plt.legend()
     plt.xticks(rotation=90)
-    plt.savefig("churn_rate_clusters.png")  # Sauvegarde le graphique
+    plt.savefig("churn_rate_clusters.png")
     plt.close()
 
     # Encodage personnalisé pour State_Category
@@ -143,7 +120,7 @@ def prepare_data(data_path):
         .agg(Num_Customers=("Churn", "size"), Churn_Rate=("Churn", "mean"))
         .reset_index()
     )
-    print(state_stats)
+    logger.info(f"Statistiques par catégorie d'état :\n{state_stats}")
 
     # Suppression de la colonne State
     df.drop(columns=["State"], inplace=True)
@@ -155,7 +132,7 @@ def prepare_data(data_path):
         correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5
     )
     plt.title("Correlation Matrix of Numerical Features")
-    plt.savefig("correlation_matrix.png")  # Sauvegarde le graphique
+    plt.savefig("correlation_matrix.png")
     plt.close()
 
     # Suppression de colonnes inutiles
@@ -185,7 +162,7 @@ def prepare_data(data_path):
         abs(corr_intl) / total_corr,
     ]
 
-    print(f"Dynamic Weights Based on Correlation: {weights}")
+    logger.info(f"Pondérations dynamiques basées sur la corrélation : {weights}")
 
     df["Usage Score"] = (
         df["Total day charge"] * weights[0]
@@ -200,7 +177,7 @@ def prepare_data(data_path):
         ["State_Category", "International plan", "Churn"]
     )
 
-    print("Colonnes numériques :", numerical_columns_n)
+    logger.info(f"Colonnes numériques : {numerical_columns_n}")
 
     # Séparation des données en ensembles d'entraînement et de test
     X = df.drop(columns=["Churn"])
@@ -224,11 +201,8 @@ def prepare_data(data_path):
     X_train_scaled_smote, y_train_smote = smote.fit_resample(X_train_scaled, y_train)
     X_test_scaled_smote, y_test_smote = smote.fit_resample(X_test_scaled, y_test)
 
+    logger.info("Préparation des données terminée.")
     return X_train_scaled_smote, X_test_scaled_smote, y_train_smote, y_test_smote
-
-
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.model_selection import GridSearchCV
 
 
 def train_model(X_train, y_train):
@@ -242,40 +216,32 @@ def train_model(X_train, y_train):
     Returns:
         model: Le modèle entraîné.
     """
-    # Initialisation du modèle GBM
+    logger.info("Début de l'entraînement du modèle...")
     gbm = GradientBoostingClassifier(random_state=42)
 
     # Grille d'hyperparamètres optimisée
     param_grid = {
-        "n_estimators": [50, 100, 150],  # Réduire le nombre d'arbres
-        "learning_rate": [0.01, 0.05, 0.1],  # Apprentissage plus rapide
-        "max_depth": [3, 5, 10],  # Profondeur limitée pour éviter le surajustement
-        "min_samples_leaf": [3, 5, 7],  # Moins de feuilles pour moins de complexité
-        "max_features": [
-            "sqrt",
-            "log2",
-            None,
-        ],  # Moins de variables utilisées par arbre
+        "n_estimators": [50, 100, 150],
+        "learning_rate": [0.01, 0.05, 0.1],
+        "max_depth": [3, 5, 10],
+        "min_samples_leaf": [3, 5, 7],
+        "max_features": ["sqrt", "log2", None],
     }
 
-    # RandomizedSearchCV au lieu de GridSearchCV (plus rapide)
+    # RandomizedSearchCV
     random_search = RandomizedSearchCV(
         estimator=gbm,
         param_distributions=param_grid,
-        n_iter=10,  # Réduction du nombre d'itérations
+        n_iter=10,
         scoring="f1",
-        cv=3,  # Moins de folds en validation croisée
+        cv=3,
         verbose=2,
-        n_jobs=-1,  # Utilisation de tous les cœurs du processeur
+        n_jobs=-1,
     )
 
-    # Entraînement
-    print("Début de l'entraînement du modèle...")
     random_search.fit(X_train, y_train)
-
-    # Meilleur modèle trouvé
     best_model = random_search.best_estimator_
-    print(f"Meilleurs hyperparamètres trouvés : {random_search.best_params_}")
+    logger.info(f"Meilleurs hyperparamètres trouvés : {random_search.best_params_}")
 
     return best_model
 
@@ -289,14 +255,14 @@ def evaluate_model(model, X_test, y_test):
         X_test: Les données de test (features).
         y_test: Les labels de test (target).
     """
-    # Faire des prédictions sur les données de test
+    logger.info("Évaluation du modèle...")
     y_pred = model.predict(X_test)
 
-    # Afficher le rapport de classification
-    print("\nClassification Report:")
-    print(classification_report(y_test, y_pred))
+    # Rapport de classification
+    logger.info("\nClassification Report:")
+    logger.info(classification_report(y_test, y_pred))
 
-    # Afficher la matrice de confusion
+    # Matrice de confusion
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(4, 3))
     sns.heatmap(
@@ -311,7 +277,7 @@ def evaluate_model(model, X_test, y_test):
     plt.title("Confusion Matrix")
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
-    plt.savefig("confusion_matrix.png")  # Sauvegarde la matrice de confusion
+    plt.savefig("confusion_matrix.png")
     plt.close()
 
 
@@ -324,7 +290,7 @@ def save_model(model, filepath):
         filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
     """
     joblib.dump(model, filepath)
-    print(f"Modèle sauvegardé avec succès dans {filepath}.")
+    logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
 
 
 def load_model(filepath):
@@ -338,5 +304,5 @@ def load_model(filepath):
         model: Le modèle chargé.
     """
     model = joblib.load(filepath)
-    print(f"Modèle chargé avec succès depuis {filepath}.")
+    logger.info(f"Modèle chargé avec succès depuis {filepath}.")
     return model

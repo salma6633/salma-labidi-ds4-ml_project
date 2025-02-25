@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/254e9f13d99a4850b7b4b60441759490/artifacts
+end_time: 1740438863015
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 254e9f13d99a4850b7b4b60441759490
+run_name: lucky-falcon-166
+run_uuid: 254e9f13d99a4850b7b4b60441759490
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740438844127
+status: 3
+tags: []
+user_id: salma

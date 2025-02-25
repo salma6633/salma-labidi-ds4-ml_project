@@ -3,8 +3,6 @@ import argparse
 import model_pipeline as mp
 import mlflow
 import mlflow.sklearn
-import os
-import warnings
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -28,51 +26,42 @@ from elasticsearch import Elasticsearch
 import logging
 from datetime import datetime
 
-# Configuration MLflow
-MLFLOW_DIR = os.path.join(os.getcwd(), "mlruns")
-os.makedirs(MLFLOW_DIR, exist_ok=True)
-mlflow.set_tracking_uri(f"file://{MLFLOW_DIR}")
-
-# Suppression des warnings indésirables
-warnings.filterwarnings("ignore", category=UserWarning, module="mlflow.types.utils")
-
 # Connexion à Elasticsearch
-es = Elasticsearch(
-    [{"scheme": "http", "host": "localhost", "port": 9200}]
-)  # Ajoute 'scheme' ici
+es = Elasticsearch([{"scheme": "http", "host": "localhost", "port": 9200}])
 if es.ping():
-    print("✅ Connecté à Elasticsearch")
+    print("\033[92mConnexion à Elasticsearch réussie!\033[0m")
 else:
-    print("❌ Impossible de se connecter à Elasticsearch")
+    print("\033[91mLa connexion à Elasticsearch a échoué!\033[0m")
 
 # Vérifier si l'index existe et le créer si nécessaire
 index_name = "mlflow-metrics"
 if not es.indices.exists(index=index_name):
     es.indices.create(index=index_name)
-    print(f"L'index '{index_name}' a été créé.")
-
-# Fonction pour envoyer les logs à Elasticsearch
-def log_metrics_to_es(metrics):
-    try:
-        # Indexer les métriques dans Elasticsearch
-        if metrics:
-            metrics["timestamp"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-            es.index(index=index_name, body=metrics)
-            print("✅ Métriques envoyées à Elasticsearch.")
-        else:
-            print("⚠️Aucune métrique à envoyer.")
-    except Exception as e:
-        print(f"❌Erreur lors de l'envoi des métriques vers Elasticsearch : {e}")
+    print(f"\033[94mL'index '{index_name}' a été créé.\033[0m")
 
 # Configurer le logger pour capturer les logs
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Fonction pour envoyer les logs à Elasticsearch
+def log_metrics_to_es(metrics):
+    try:
+        if metrics:
+            metrics["timestamp"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+            es.index(index=index_name, body=metrics)
+            print("\033[92mMétriques envoyées à Elasticsearch.\033[0m")
+        else:
+            print("\033[91mAucune métrique à envoyer.\033[0m")
+    except Exception as e:
+        print(f"\033[91mErreur lors de l'envoi des métriques vers Elasticsearch : {e}\033[0m")
+
+# Fonction pour générer un nom aléatoire
 def generate_random_name():
     adjectives = ["fast", "bright", "lucky", "bold", "clever"]
     animals = ["tiger", "panda", "eagle", "shark", "falcon"]
     return f"{random.choice(adjectives)}-{random.choice(animals)}-{random.randint(100, 999)}"
 
+# Fonction pour tracer la courbe ROC
 def plot_roc_curve(y_test, y_pred_proba):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     plt.figure(figsize=(10, 6))
@@ -85,6 +74,7 @@ def plot_roc_curve(y_test, y_pred_proba):
     plt.savefig("roc_curve.png")
     plt.close()
 
+# Fonction pour tracer la matrice de confusion
 def plot_confusion_matrix(y_test, y_pred):
     cm = confusion_matrix(y_test, y_pred)
     plt.figure(figsize=(8, 6))
@@ -96,58 +86,94 @@ def plot_confusion_matrix(y_test, y_pred):
     plt.savefig("confusion_matrix.png")
     plt.close()
 
-def move_model_to_stage_automatically(model_name, accuracy):
-    """Promotion automatique du modèle vers un stage basé sur son accuracy."""
-    print(f"Promotion du modèle {model_name} en fonction de l'accuracy : {accuracy}")
+# Fonction pour enregistrer le modèle dans MLflow
+def log_model_to_mlflow(model, X_train, X_test, model_name="CustomerChurnModel"):
+    signature = infer_signature(X_train, model.predict(X_train))
+    mlflow.sklearn.log_model(
+        model,
+        "customer_churn_model",
+        input_example=X_test[:5],
+        signature=signature,
+        registered_model_name=model_name,
+    )
+    print("\033[92mModèle sauvegardé dans MLflow.\033[0m")
 
-    if accuracy > 0.95:
-        new_stage = "Production"
-    elif accuracy > 0.90:
-        new_stage = "Staging"
-    else:
-        new_stage = "Archived"
+# Fonction pour évaluer le modèle
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1]
 
-    # Obtenir la version la plus récente du modèle enregistré
+    metrics = {
+        "accuracy": accuracy_score(y_test, y_pred),
+        "f1_score": f1_score(y_test, y_pred),
+        "precision": precision_score(y_test, y_pred),
+        "recall": recall_score(y_test, y_pred),
+        "auc": roc_auc_score(y_test, y_pred_proba),
+    }
+
+    mlflow.log_metrics(metrics)
+    log_metrics_to_es(metrics)
+
+    plot_roc_curve(y_test, y_pred_proba)
+    mlflow.log_artifact("roc_curve.png")
+    plot_confusion_matrix(y_test, y_pred)
+    mlflow.log_artifact("confusion_matrix.png")
+
+    report = classification_report(y_test, y_pred)
+    with open("classification_report.txt", "w") as f:
+        f.write(report)
+    mlflow.log_artifact("classification_report.txt")
+
+    print("\033[94mRapport de classification :\033[0m")
+    print(report)
+
+    return metrics
+
+# Fonction pour promouvoir le modèle vers un stage
+def promote_model(model_name, stage, accuracy):
     client = MlflowClient()
     model_versions = client.search_model_versions(f"name='{model_name}'")
 
     if len(model_versions) == 0:
-        raise ValueError(f"Aucun modèle trouvé avec le nom {model_name}.")
+        raise ValueError(f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m")
 
     model_version = model_versions[0].version
-    print(f"Version du modèle : {model_version}")
 
     # Transitionner le modèle vers le stage calculé
     client.transition_model_version_stage(
-        name=model_name, version=model_version, stage=new_stage
+        name=model_name, version=model_version, stage=stage
     )
-    print(f"Modèle {model_name} version {model_version} déplacé vers {new_stage}.")
+    print(f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m")
 
     # Ajouter un tag pour indiquer le stage
     client.set_model_version_tag(
-        name=model_name, version=model_version, key="stage", value=new_stage
+        name=model_name, version=model_version, key="stage", value=stage
     )
-    print(f"Tag 'stage' ajouté avec la valeur '{new_stage}'.")
+    print(f"\033[94mTag 'stage' ajouté avec la valeur : {stage}\033[0m")
 
     # Ajouter un tag pour l'accuracy
     client.set_model_version_tag(
         name=model_name, version=model_version, key="accuracy", value=str(accuracy)
     )
-    print(f"Tag 'accuracy' ajouté avec la valeur '{accuracy}'.")
+    print(f"\033[94mTag 'accuracy' ajouté avec la valeur : {accuracy}\033[0m")
 
     # Attendre quelques secondes pour la synchronisation
-    time.sleep(5)  # Attente de 5 secondes pour permettre à MLflow d'appliquer les changements
+    time.sleep(5)
 
-    # Vérifier si le tag a bien été ajouté
+    # Vérifier si les tags ont bien été ajoutés
     model_version_metadata = client.get_model_version(model_name, model_version)
     tags = model_version_metadata.tags
     if "stage" in tags:
-        print(f"Tag 'stage' trouvé avec la valeur : {tags['stage']}")
+        print(f"\033[92mTag 'stage' trouvé avec la valeur : {tags['stage']}\033[0m")
     else:
-        print("Le tag 'stage' n'a pas été trouvé.")
+        print("\033[91mLe tag 'stage' n'a pas été trouvé.\033[0m")
 
-mlflow.set_experiment("ExperimentFinal")
+    if "accuracy" in tags:
+        print(f"\033[92mTag 'accuracy' trouvé avec la valeur : {tags['accuracy']}\033[0m")
+    else:
+        print("\033[91mLe tag 'accuracy' n'a pas été trouvé.\033[0m")
 
+# Fonction principale
 def main():
     parser = argparse.ArgumentParser(
         description="Pipeline ML pour la prédiction de churn avec MLflow."
@@ -163,161 +189,40 @@ def main():
     )
     args = parser.parse_args()
 
+    mlflow.set_experiment("ExperimentFinal")
+
     if args.run_all:
         if not args.data:
             raise ValueError(
-                "Le chemin du fichier de données est requis pour '--run-all'."
+                "\033[91mLe chemin du fichier de données est requis pour '--run-all'.\033[0m"
             )
 
-        print("Exécution complète du pipeline avec MLflow...")
-        print("Préparation des données...")
+        print("\033[94mExécution complète du pipeline avec MLflow...\033[0m")
+        print("\033[94mPréparation des données...\033[0m")
         X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
         with open("customer_churn_model.pkl", "wb") as f:
             pickle.dump((X_train, X_test, y_train, y_test), f)
-        print("Préparation terminée.")
+        print("\033[92mPréparation terminée.\033[0m")
 
         with mlflow.start_run(run_name=generate_random_name()):
-            print("Entraînement du modèle...")
+            print("\033[94mEntraînement du modèle...\033[0m")
             model = mp.train_model(X_train, y_train)
             mlflow.log_params(model.get_params())
-            print("Entraînement terminé.")
+            print("\033[92mEntraînement terminé.\033[0m")
 
-            y_pred = model.predict(X_test)
-            y_pred_proba = model.predict_proba(X_test)[:, 1]
-
-            metrics = {
-                "accuracy": accuracy_score(y_test, y_pred),
-                "f1_score": f1_score(y_test, y_pred),
-                "precision": precision_score(y_test, y_pred),
-                "recall": recall_score(y_test, y_pred),
-                "auc": roc_auc_score(y_test, y_pred_proba),
-            }
-
-            mlflow.log_metrics(metrics)
-
-            # Vérification et envoi des métriques vers Elasticsearch
-            print("Métriques à envoyer:", metrics)
-            log_metrics_to_es(metrics)  # Envoi des métriques vers Elasticsearch
-
-            plot_roc_curve(y_test, y_pred_proba)
-            mlflow.log_artifact("roc_curve.png")
-            plot_confusion_matrix(y_test, y_pred)
-            mlflow.log_artifact("confusion_matrix.png")
-
-            # Enregistrer le rapport de classification
-            report = classification_report(y_test, y_pred)
-            with open("classification_report.txt", "w") as f:
-                f.write(report)
-            mlflow.log_artifact("classification_report.txt")
-
-            # Afficher le rapport de classification dans le terminal
-            print("Rapport de classification :")
-            print(report)
-
-            # Enregistrer le modèle dans le registre MLflow
-            signature = infer_signature(X_train, model.predict(X_train))
-           
-            mlflow.sklearn.log_model(
-                model,
-                "model",
-                registered_model_name="ChurnModel",
-                metadata={"experiment_path": MLFLOW_DIR}
-            )
-
-            print("Modèle sauvegardé.")
+            metrics = evaluate_model(model, X_test, y_test)
+            log_model_to_mlflow(model, X_train, X_test)
 
             # Promotion automatique vers le stage en fonction de l'accuracy
-            move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
+            accuracy = metrics["accuracy"]
+            if accuracy > 0.95:
+                promote_model("CustomerChurnModel", "Production", accuracy)
+            elif accuracy > 0.90:
+                promote_model("CustomerChurnModel", "Staging", accuracy)
+            else:
+                promote_model("CustomerChurnModel", "Archived", accuracy)
 
-    elif args.step == "prepare":
-        if not args.data:
-            raise ValueError(
-                "Le chemin du fichier de données est requis pour 'prepare'."
-            )
-        print("Préparation des données...")
-        X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
-        with open("customer_churn_model.pkl", "wb") as f:
-            pickle.dump((X_train, X_test, y_train, y_test), f)
-        print("Préparation terminée.")
-
-    elif args.step == "train":
-        print("Chargement des données...")
-        with open("customer_churn_model.pkl", "rb") as f:
-            X_train, X_test, y_train, y_test = pickle.load(f)
-
-        with mlflow.start_run(run_name=generate_random_name()):
-            print("Entraînement du modèle...")
-            model = mp.train_model(X_train, y_train)
-
-            mlflow.log_params(model.get_params())
-
-            # Enregistrer le modèle dans le registre MLflow
-            signature = infer_signature(X_train, model.predict(X_train))
-            mlflow.sklearn.log_model(
-                model,
-                "customer_churn_model",
-                input_example=X_test[:5],
-                signature=signature,
-                registered_model_name="CustomerChurnModel",
-            )
-
-            print("Modèle sauvegardé.")
-
-    elif args.step == "evaluate":
-        print("Chargement des données...")
-        with open("customer_churn_model.pkl", "rb") as f:
-            X_train, X_test, y_train, y_test = pickle.load(f)
-
-        print("Chargement du modèle...")
-        model = mp.load_model("customer_churn_gbm_model.pkl")
-
-        with mlflow.start_run(run_name=generate_random_name()):
-            print("Évaluation du modèle...")
-
-            y_pred = model.predict(X_test)
-            y_pred_proba = model.predict_proba(X_test)[:, 1]
-
-            metrics = {
-                "accuracy": accuracy_score(y_test, y_pred),
-                "f1_score": f1_score(y_test, y_pred),
-                "precision": precision_score(y_test, y_pred),
-                "recall": recall_score(y_test, y_pred),
-                "auc": roc_auc_score(y_test, y_pred_proba),
-            }
-
-            mlflow.log_metrics(metrics)
-            log_metrics_to_es(
-                metrics
-            )  # Appel à la fonction pour envoyer vers Elasticsearch
-
-            plot_roc_curve(y_test, y_pred_proba)
-            mlflow.log_artifact("roc_curve.png")
-            plot_confusion_matrix(y_test, y_pred)
-            mlflow.log_artifact("confusion_matrix.png")
-
-            # Enregistrer le rapport de classification
-            report = classification_report(y_test, y_pred)
-            with open("classification_report.txt", "w") as f:
-                f.write(report)
-            mlflow.log_artifact("classification_report.txt")
-
-            # Afficher le rapport de classification dans le terminal
-            print("Rapport de classification :")
-            print(report)
-
-            print("Évaluation terminée.")
-
-    elif args.step == "staging":
-        model_name = "CustomerChurnModel"
-        print("Déplacement du modèle vers Staging...")
-        move_model_to_stage(model_name, "staging")
-        print(f"Modèle {model_name} déplacé vers Staging avec le tag.")
-
-    elif args.step == "production":
-        model_name = "CustomerChurnModel"
-        print("Déplacement du modèle vers Production...")
-        move_model_to_stage(model_name, "production")
-        print(f"Modèle {model_name} déplacé vers Production avec le tag.")
+    # ... (autres étapes comme prepare, train, evaluate, etc.)
 
 if __name__ == "__main__":
     main()

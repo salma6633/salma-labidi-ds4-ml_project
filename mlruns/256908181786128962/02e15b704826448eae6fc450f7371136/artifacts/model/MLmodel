@@ -1,0 +1,22 @@
+artifact_path: model
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.3
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.6.1
+metadata:
+  experiment_path: /home/salma/salma-labidi-ds4-ml_project/mlruns
+mlflow_version: 2.20.0
+model_size_bytes: 3885256
+model_uuid: 319fae53555841b090e27b2dbdaef693
+run_id: 02e15b704826448eae6fc450f7371136
+utc_time_created: '2025-02-24 20:39:59.577107'

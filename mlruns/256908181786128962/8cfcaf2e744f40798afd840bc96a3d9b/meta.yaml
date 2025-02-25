@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/8cfcaf2e744f40798afd840bc96a3d9b/artifacts
+end_time: 1740413049544
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 8cfcaf2e744f40798afd840bc96a3d9b
+run_name: clever-tiger-874
+run_uuid: 8cfcaf2e744f40798afd840bc96a3d9b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740413023452
+status: 3
+tags: []
+user_id: salma

@@ -23,6 +23,10 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
+        volumes:
+          - esdata:/usr/share/elasticsearch/data
+    volumes:
+      esdata:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -40,10 +44,15 @@ jobs:
         pip install -r requirements.txt
         pip install xgboost lifelines pytest black mypy
 
+    - name: Clean MLflow directory
+      run: |
+        rm -rf mlruns/*
+
     - name: Configure MLflow directory
       run: |
         mkdir -p mlruns
         chmod 755 mlruns
+        ls -l mlruns
 
     - name: Check Elasticsearch connection
       run: |
@@ -95,15 +104,13 @@ jobs:
         source venv/bin/activate
         python main.py --step train
 
-    - name: Test MLflow experiment
+    - name: Evaluate model
+      env:
+        ELASTICSEARCH_HOST: localhost
+        MLFLOW_TRACKING_URI: http://localhost:5000
       run: |
         source venv/bin/activate
-        python -c "import mlflow; mlflow.set_tracking_uri('http://localhost:5000'); experiment = mlflow.get_experiment_by_name('ExperimentFinal'); mlflow.set_experiment(experiment.experiment_id)"
-
-    - name: Check MLflow experiments
-      run: |
-        source venv/bin/activate
-        mlflow experiments search
+        python main.py --step evaluate
 
     - name: Validate Docker image name
       run: |

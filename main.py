@@ -98,12 +98,12 @@ def log_model_to_mlflow(model, X_train, X_test, model_name="CustomerChurnModel")
     signature = infer_signature(X_train, model.predict(X_train))
     mlflow.sklearn.log_model(
         model,
-        "CustomerChurnModel",
-        input_example=X_test[:5],
-        signature=signature,
-        registered_model_name=model_name,
+        artifact_path="model",  # Chemin relatif pour stocker le modèle
+        registered_model_name=model_name,  # Nom du modèle enregistré
+        signature=signature,  # Signature du modèle
+        input_example=X_test[:5],  # Exemple d'entrée pour le modèle
     )
-    print("\033[92mModèle sauvegardé dans MLflow.\033[0m")
+    print(f"\033[92mModèle sauvegardé dans MLflow sous le nom '{model_name}'.\033[0m")
 
 
 # Fonction pour évaluer le modèle
@@ -141,52 +141,36 @@ def evaluate_model(model, X_test, y_test):
 # Fonction pour promouvoir le modèle vers un stage
 def promote_model(model_name, stage, accuracy):
     client = MlflowClient()
-    model_versions = client.search_model_versions(f"name='{model_name}'")
 
+    # Trouver la dernière version du modèle
+    model_versions = client.search_model_versions(f"name='{model_name}'")
     if len(model_versions) == 0:
-        raise ValueError(
-            f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m"
-        )
+        raise ValueError(f"\033[91mAucun modèle trouvé avec le nom {model_name}.\033[0m")
 
     model_version = model_versions[0].version
 
-    # Transitionner le modèle vers le stage calculé
+    # Promouvoir le modèle vers le stage spécifié
     client.transition_model_version_stage(
-        name=model_name, version=model_version, stage=stage
+        name=model_name,
+        version=model_version,
+        stage=stage,
     )
-    print(
-        f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m"
-    )
+    print(f"\033[92mModèle {model_name} version {model_version} déplacé vers {stage}.\033[0m")
 
-    # Ajouter un tag pour indiquer le stage
+    # Ajouter des tags pour le stage et l'accuracy
     client.set_model_version_tag(
-        name=model_name, version=model_version, key="stage", value=stage
+        name=model_name,
+        version=model_version,
+        key="stage",
+        value=stage,
     )
-    print(f"\033[94mTag 'stage' ajouté avec la valeur : {stage}\033[0m")
-
-    # Ajouter un tag pour l'accuracy
     client.set_model_version_tag(
-        name=model_name, version=model_version, key="accuracy", value=str(accuracy)
+        name=model_name,
+        version=model_version,
+        key="accuracy",
+        value=str(accuracy),
     )
-    print(f"\033[94mTag 'accuracy' ajouté avec la valeur : {accuracy}\033[0m")
-
-    # Attendre quelques secondes pour la synchronisation
-    time.sleep(5)
-
-    # Vérifier si les tags ont bien été ajoutés
-    model_version_metadata = client.get_model_version(model_name, model_version)
-    tags = model_version_metadata.tags
-    if "stage" in tags:
-        print(f"\033[92mTag 'stage' trouvé avec la valeur : {tags['stage']}\033[0m")
-    else:
-        print("\033[91mLe tag 'stage' n'a pas été trouvé.\033[0m")
-
-    if "accuracy" in tags:
-        print(
-            f"\033[92mTag 'accuracy' trouvé avec la valeur : {tags['accuracy']}\033[0m"
-        )
-    else:
-        print("\033[91mLe tag 'accuracy' n'a pas été trouvé.\033[0m")
+    print(f"\033[94mTags ajoutés : stage={stage}, accuracy={accuracy}\033[0m")
 
 
 # Fonction pour sauvegarder le modèle
@@ -199,7 +183,6 @@ def save_model(model, filepath="customer_churn_model.pkl"):
         filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
     """
     import joblib
-
     joblib.dump(model, filepath)
     logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
 
@@ -216,7 +199,6 @@ def load_model(filepath="customer_churn_model.pkl"):
         model: Le modèle chargé.
     """
     import joblib
-
     model = joblib.load(filepath)
     logger.info(f"Modèle chargé avec succès depuis {filepath}.")
     return model
@@ -259,8 +241,6 @@ def main():
         print("\033[94mExécution complète du pipeline avec MLflow...\033[0m")
         print("\033[94mPréparation des données...\033[0m")
         X_train, X_test, y_train, y_test = mp.prepare_data(args.data)
-        with open("customer_churn_model.pkl", "wb") as f:
-            pickle.dump((X_train, X_test, y_train, y_test), f)
         print("\033[92mPréparation terminée.\033[0m")
 
         with mlflow.start_run(run_name=generate_random_name()):
@@ -272,10 +252,13 @@ def main():
             # Sauvegarder le modèle
             save_model(model)
 
+            # Évaluer le modèle
             metrics = evaluate_model(model, X_test, y_test)
+
+            # Enregistrer le modèle dans MLflow
             log_model_to_mlflow(model, X_train, X_test)
 
-            # Promotion automatique vers le stage en fonction de l'accuracy
+            # Promouvoir le modèle vers un stage
             move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
     elif args.step == "prepare":
@@ -291,9 +274,7 @@ def main():
         # Sauvegarder les données préparées
         with open("customer_churn_model.pkl", "wb") as f:
             pickle.dump((X_train, X_test, y_train, y_test), f)
-        print(
-            "\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m"
-        )
+        print("\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m")
 
     elif args.step == "train":
         if not args.data:
@@ -392,9 +373,7 @@ def main():
         move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
     else:
-        print(
-            "\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m"
-        )
+        print("\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m")
 
 
 if __name__ == "__main__":

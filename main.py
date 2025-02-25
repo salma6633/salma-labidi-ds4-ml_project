@@ -199,6 +199,7 @@ def save_model(model, filepath="customer_churn_model.pkl"):
         filepath (str): Chemin vers le fichier où le modèle sera sauvegardé.
     """
     import joblib
+
     joblib.dump(model, filepath)
     logger.info(f"Modèle sauvegardé avec succès dans {filepath}.")
 
@@ -215,6 +216,7 @@ def load_model(filepath="customer_churn_model.pkl"):
         model: Le modèle chargé.
     """
     import joblib
+
     model = joblib.load(filepath)
     logger.info(f"Modèle chargé avec succès depuis {filepath}.")
     return model
@@ -289,7 +291,9 @@ def main():
         # Sauvegarder les données préparées
         with open("customer_churn_model.pkl", "wb") as f:
             pickle.dump((X_train, X_test, y_train, y_test), f)
-        print("\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m")
+        print(
+            "\033[92mDonnées préparées sauvegardées dans 'customer_churn_model.pkl'.\033[0m"
+        )
 
     elif args.step == "train":
         if not args.data:
@@ -388,7 +392,9 @@ def main():
         move_model_to_stage_automatically("CustomerChurnModel", metrics["accuracy"])
 
     else:
-        print("\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m")
+        print(
+            "\033[91mÉtape non reconnue. Utilisez --help pour voir les options disponibles.\033[0m"
+        )
 
 
 if __name__ == "__main__":

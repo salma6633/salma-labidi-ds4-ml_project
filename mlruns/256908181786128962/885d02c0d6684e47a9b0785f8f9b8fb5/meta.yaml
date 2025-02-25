@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/885d02c0d6684e47a9b0785f8f9b8fb5/artifacts
+end_time: 1740497667085
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 885d02c0d6684e47a9b0785f8f9b8fb5
+run_name: fast-falcon-195
+run_uuid: 885d02c0d6684e47a9b0785f8f9b8fb5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740497649599
+status: 3
+tags: []
+user_id: salma

@@ -95,10 +95,15 @@ jobs:
         source venv/bin/activate
         python main.py --step train
 
+    - name: Test MLflow experiment
+      run: |
+        source venv/bin/activate
+        python -c "import mlflow; mlflow.set_tracking_uri('http://localhost:5000'); mlflow.create_experiment('ExperimentFinal')"
+
     - name: Check MLflow experiments
       run: |
         source venv/bin/activate
-        mlflow experiments list
+        mlflow experiments search
 
     - name: Validate Docker image name
       run: |

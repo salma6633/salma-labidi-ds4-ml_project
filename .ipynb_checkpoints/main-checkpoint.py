@@ -25,6 +25,8 @@ import time
 from elasticsearch import Elasticsearch
 import logging
 from datetime import datetime
+from src.model_pipeline import run_pipeline
+import logging
 
 # Connexion à Elasticsearch
 es = Elasticsearch([{"scheme": "http", "host": "localhost", "port": 9200}])

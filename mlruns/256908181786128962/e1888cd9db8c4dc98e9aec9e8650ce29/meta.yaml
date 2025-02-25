@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/e1888cd9db8c4dc98e9aec9e8650ce29/artifacts
+end_time: 1740524922552
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: e1888cd9db8c4dc98e9aec9e8650ce29
+run_name: welcoming-roo-433
+run_uuid: e1888cd9db8c4dc98e9aec9e8650ce29
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740524919187
+status: 3
+tags: []
+user_id: salma

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/7d72d8b5368d46628941c2d5f6003631/artifacts
+end_time: 1740526109773
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 7d72d8b5368d46628941c2d5f6003631
+run_name: bright-chimp-120
+run_uuid: 7d72d8b5368d46628941c2d5f6003631
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740526105741
+status: 3
+tags: []
+user_id: salma

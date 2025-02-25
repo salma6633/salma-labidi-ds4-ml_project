@@ -89,6 +89,11 @@ jobs:
         source venv/bin/activate
         pytest --maxfail=1 --disable-warnings -v
 
+    - name: Set MLflow experiment to ExperimentFinal
+      run: |
+        source venv/bin/activate
+        mlflow experiments create --experiment-name ExperimentFinal || true
+
     - name: Run all steps
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
@@ -109,5 +114,3 @@ jobs:
     - name: Check MLflow meta.yaml
       run: |
         cat mlruns/models/CustomerChurnModel/meta.yaml
-
-

@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/339ca9454b5149568db264d27833e614/artifacts
+end_time: 1740523316741
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 339ca9454b5149568db264d27833e614
+run_name: sneaky-croc-346
+run_uuid: 339ca9454b5149568db264d27833e614
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740523313709
+status: 3
+tags: []
+user_id: salma

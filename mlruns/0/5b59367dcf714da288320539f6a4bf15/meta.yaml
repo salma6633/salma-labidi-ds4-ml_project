@@ -1,0 +1,15 @@
+artifact_uri: mlflow-artifacts:/0/5b59367dcf714da288320539f6a4bf15/artifacts
+end_time: 1740523637635
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 5b59367dcf714da288320539f6a4bf15
+run_name: respected-boar-337
+run_uuid: 5b59367dcf714da288320539f6a4bf15
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740523631605
+status: 3
+tags: []
+user_id: salma

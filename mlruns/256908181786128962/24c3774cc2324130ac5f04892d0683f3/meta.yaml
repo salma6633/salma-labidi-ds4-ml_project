@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/24c3774cc2324130ac5f04892d0683f3/artifacts
+end_time: 1740526445968
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 24c3774cc2324130ac5f04892d0683f3
+run_name: languid-worm-880
+run_uuid: 24c3774cc2324130ac5f04892d0683f3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740526443015
+status: 3
+tags: []
+user_id: salma

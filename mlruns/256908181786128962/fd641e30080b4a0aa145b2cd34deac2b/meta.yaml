@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/fd641e30080b4a0aa145b2cd34deac2b/artifacts
+end_time: 1740524041410
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: fd641e30080b4a0aa145b2cd34deac2b
+run_name: redolent-whale-583
+run_uuid: fd641e30080b4a0aa145b2cd34deac2b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740524038561
+status: 3
+tags: []
+user_id: salma

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/53009814c66f492eb210b7b3218de7a3/artifacts
+end_time: 1740516190368
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 53009814c66f492eb210b7b3218de7a3
+run_name: fast-tiger-273
+run_uuid: 53009814c66f492eb210b7b3218de7a3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740516177130
+status: 3
+tags: []
+user_id: salma

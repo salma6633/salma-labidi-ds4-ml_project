@@ -50,6 +50,10 @@ jobs:
         mkdir -p mlruns
         chmod 755 mlruns
 
+    - name: Check MLflow directory
+      run: |
+        ls -l mlruns
+
     - name: Check Elasticsearch connection
       run: |
         curl -X GET "http://localhost:9200"
@@ -105,17 +109,6 @@ jobs:
         source venv/bin/activate
         python main.py --step save --data data_churn.csv
 
-    - name: Upload model artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: model
-        path: customer_churn_model.pkl
-
-    - name: Load model
-      run: |
-        source venv/bin/activate
-        python main.py --step load
-
     - name: Evaluate model
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
@@ -124,10 +117,32 @@ jobs:
         source venv/bin/activate
         python main.py --step evaluate --data data_churn.csv
 
-    - name: Check MLflow logs
+    - name: Log model to MLflow
+      env:
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
-        cat mlruns/0/meta.yaml
-        cat mlruns/0/*/meta.yaml
+        source venv/bin/activate
+        python main.py --step log_model --data data_churn.csv
+
+    - name: Promote model
+      env:
+        MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+      run: |
+        source venv/bin/activate
+        python main.py --step promote --data data_churn.csv
+
+    - name: Debug MLflow directory
+      run: |
+        echo "Contenu du répertoire mlruns :"
+        ls -l mlruns
+        echo "Contenu du répertoire mlruns/models :"
+        ls -l mlruns/models
+        echo "Contenu du répertoire mlruns/models/CustomerChurnModel :"
+        ls -l mlruns/models/CustomerChurnModel
+
+    - name: Check MLflow meta.yaml
+      run: |
+        cat mlruns/models/CustomerChurnModel/meta.yaml
 
     - name: Check Python logs
       run: |

@@ -103,7 +103,7 @@ jobs:
     - name: Save model
       run: |
         source venv/bin/activate
-        python main.py --step save
+        python main.py --step save --data data_churn.csv
 
     - name: Upload model artifact
       uses: actions/upload-artifact@v4
@@ -122,4 +122,4 @@ jobs:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
-        python main.py --step evaluate
+        python main.py --step evaluate --data data_churn.csv

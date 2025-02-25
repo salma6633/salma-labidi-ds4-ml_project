@@ -58,6 +58,10 @@ jobs:
         source venv/bin/activate
         mlflow ui --host 0.0.0.0 --port 5000 &
 
+    - name: Check MLflow server status
+      run: |
+        curl -I http://localhost:5000
+
     - name: Run linter (Black)
       run: |
         source venv/bin/activate
@@ -71,7 +75,7 @@ jobs:
     - name: Run unit tests
       env:
         ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
+        MLFLOW_TRACKING_URI: http://localhost:5000
       run: |
         source venv/bin/activate
         pytest --maxfail=1 --disable-warnings -v
@@ -86,14 +90,19 @@ jobs:
     - name: Train model
       env:
         ELASTICSEARCH_HOST: localhost
-        MLFLOW_TRACKING_URI: file://${{ github.workspace }}/mlruns
+        MLFLOW_TRACKING_URI: http://localhost:5000
       run: |
         source venv/bin/activate
         python main.py --step train
 
+    - name: Check MLflow experiments
+      run: |
+        source venv/bin/activate
+        mlflow experiments list
+
     - name: Validate Docker image name
       run: |
-        echo "Docker image name: ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }}"
+        echo "Docker image name: ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}"
 
     - name: Build Docker image
       run: |

@@ -45,6 +45,19 @@ jobs:
         mkdir -p mlruns
         chmod 755 mlruns
 
+    - name: Check Elasticsearch connection
+      run: |
+        curl -X GET "localhost:9200"
+
+    - name: Create mlflow-metrics index
+      run: |
+        curl -X PUT "localhost:9200/mlflow-metrics"
+
+    - name: Start MLflow server
+      run: |
+        source venv/bin/activate
+        mlflow ui --host 0.0.0.0 --port 5000 &
+
     - name: Run linter (Black)
       run: |
         source venv/bin/activate
@@ -78,11 +91,15 @@ jobs:
         source venv/bin/activate
         python main.py --step train
 
+    - name: Validate Docker image name
+      run: |
+        echo "Docker image name: ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }}"
+
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }} .
+        docker build -t ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} .
 
     - name: Push to Docker Hub
       run: |
-        echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-        docker push ${{ secrets.DOCKERHUB_USERNAME }}/salma_labidi_4ds4_mlops:${{ github.sha }}
+        echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker push ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}

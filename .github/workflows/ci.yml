@@ -104,13 +104,18 @@ jobs:
     - name: Save model
       run: |
         source venv/bin/activate
-        python -c "from main import save_model; save_model(model, 'CustomerChurnModel.joblib')"
+        python main.py --step save
 
     - name: Upload model artifact
       uses: actions/upload-artifact@v4
       with:
         name: model
         path: CustomerChurnModel.joblib
+
+    - name: Load model
+      run: |
+        source venv/bin/activate
+        python main.py --step load
 
     - name: Evaluate model
       env:
@@ -119,8 +124,3 @@ jobs:
       run: |
         source venv/bin/activate
         python main.py --step evaluate
-
-    - name: Load and validate model
-      run: |
-        source venv/bin/activate
-        python -c "from main import load_model; model = load_model('CustomerChurnModel.joblib'); print('Model loaded successfully!')"

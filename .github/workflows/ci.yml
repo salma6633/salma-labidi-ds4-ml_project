@@ -43,59 +43,48 @@ jobs:
         pip install --upgrade pip
         pip install -r requirements.txt
         pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
-
     - name: Clean MLflow directory
       run: |
         rm -rf mlruns/*
         mkdir -p mlruns
         chmod 755 mlruns
-
     - name: Check MLflow directory
       run: |
         ls -l mlruns
-
     - name: Check Elasticsearch connection
       run: |
         curl -X GET "http://localhost:9200"
-
     - name: Create mlflow-metrics index
       run: |
         curl -X PUT "http://localhost:9200/mlflow-metrics"
-
     - name: Start MLflow server
       run: |
         source venv/bin/activate
         mlflow ui --host 0.0.0.0 --port 5000 &
         sleep 10  # Attendre que le serveur démarre
-
     - name: Check MLflow server status
       run: |
         curl -I http://localhost:5000
-
     - name: Run linter (Black)
       run: |
         source venv/bin/activate
         black --check .
-
     - name: Run static type checking (Mypy)
       run: |
         source venv/bin/activate
         mypy --ignore-missing-imports --exclude venv .
-
     - name: Run unit tests
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
         pytest --maxfail=1 --disable-warnings -v
-
     - name: Prepare data
       env:
         ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
       run: |
         source venv/bin/activate
         python main.py --step prepare --data data_churn.csv
-
     - name: Train model
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
@@ -103,12 +92,10 @@ jobs:
       run: |
         source venv/bin/activate
         python main.py --step train --data data_churn.csv
-
     - name: Save model
       run: |
         source venv/bin/activate
         python main.py --step save --data data_churn.csv
-
     - name: Evaluate model
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
@@ -116,21 +103,18 @@ jobs:
       run: |
         source venv/bin/activate
         python main.py --step evaluate --data data_churn.csv
-
     - name: Log model to MLflow
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
         python main.py --step log_model --data data_churn.csv
-
     - name: Promote model
       env:
         MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
       run: |
         source venv/bin/activate
         python main.py --step promote --data data_churn.csv
-
     - name: Debug MLflow directory
       run: |
         echo "Contenu du répertoire mlruns :"
@@ -139,11 +123,9 @@ jobs:
         ls -l mlruns/models
         echo "Contenu du répertoire mlruns/models/CustomerChurnModel :"
         ls -l mlruns/models/CustomerChurnModel
-
     - name: Check MLflow meta.yaml
       run: |
         cat mlruns/models/CustomerChurnModel/meta.yaml
-
     - name: Check Python logs
       run: |
         cat *.log

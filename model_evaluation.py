@@ -1,10 +1,17 @@
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve, accuracy_score
+from sklearn.metrics import (
+    classification_report,
+    confusion_matrix,
+    roc_auc_score,
+    roc_curve,
+    accuracy_score,
+)
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 def evaluate_model(model, X_test, y_test):
     """

@@ -24,6 +24,7 @@ def log_model_to_mlflow(model, X_train, X_test, model_name="CustomerChurnModel")
     )
     print(f"Modèle sauvegardé dans MLflow sous le nom '{model_name}'.")
 
+
 def move_model_to_stage_automatically(model_name, accuracy):
     """
     Déplace automatiquement le modèle vers un stage en fonction de son accuracy.

@@ -5,6 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def train_model(X_train, y_train):
     """
     Entraîne un modèle Gradient Boosting Machine (GBM) avec RandomizedSearchCV.

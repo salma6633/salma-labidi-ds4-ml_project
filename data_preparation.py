@@ -11,6 +11,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def prepare_data(data_path):
     """
     Charge les données, traite les outliers, encode les variables catégorielles,
@@ -67,12 +68,16 @@ def prepare_data(data_path):
 
     # Normalisation des données
     numerical_columns = df.select_dtypes(include=["int64", "float64"]).columns
-    numerical_columns = numerical_columns.drop(["State_Category", "International plan", "Churn"])
+    numerical_columns = numerical_columns.drop(
+        ["State_Category", "International plan", "Churn"]
+    )
 
     # Séparation des données
     X = df.drop(columns=["Churn"])
     y = df["Churn"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
     # Normalisation
     scaler = StandardScaler()

@@ -14,6 +14,7 @@ from mlflow.tracking import MlflowClient
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def main():
     # Configurer l'URI de suivi pour utiliser le serveur MLflow local
     mlflow.set_tracking_uri("http://localhost:5000")
@@ -22,10 +23,20 @@ def main():
     mlflow.set_experiment("ExperimentFinal")
 
     # Configuration des arguments en ligne de commande
-    parser = argparse.ArgumentParser(description="Pipeline ML pour la prédiction de churn.")
-    parser.add_argument("--data", type=str, required=True, help="Chemin du fichier de données.")
-    parser.add_argument("--run-all", action="store_true", help="Exécuter toutes les étapes du pipeline.")
-    parser.add_argument("--step", type=str, help="Étape à exécuter : prepare, train, evaluate, save, load, log_model, promote")
+    parser = argparse.ArgumentParser(
+        description="Pipeline ML pour la prédiction de churn."
+    )
+    parser.add_argument(
+        "--data", type=str, required=True, help="Chemin du fichier de données."
+    )
+    parser.add_argument(
+        "--run-all", action="store_true", help="Exécuter toutes les étapes du pipeline."
+    )
+    parser.add_argument(
+        "--step",
+        type=str,
+        help="Étape à exécuter : prepare, train, evaluate, save, load, log_model, promote",
+    )
     args = parser.parse_args()
 
     if args.run_all:
@@ -106,12 +117,15 @@ def main():
                 accuracy = metrics["accuracy"]
                 move_model_to_stage_automatically("CustomerChurnModel", accuracy)
             else:
-                logger.error("Impossible de promouvoir le modèle : métriques manquantes.")
+                logger.error(
+                    "Impossible de promouvoir le modèle : métriques manquantes."
+                )
 
         else:
             logger.error(f"Étape non reconnue : {args.step}")
     else:
         logger.error("Veuillez spécifier une option : --run-all ou --step <étape>.")
+
 
 if __name__ == "__main__":
     main()

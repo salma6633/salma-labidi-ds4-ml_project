@@ -18,6 +18,7 @@ if not es.indices.exists(index=index_name):
     es.indices.create(index=index_name)
     logger.info(f"\033[94mL'index '{index_name}' a été créé.\033[0m")
 
+
 def log_metrics_to_es(metrics):
     """
     Envoie les métriques à Elasticsearch.
@@ -30,4 +31,6 @@ def log_metrics_to_es(metrics):
         else:
             logger.warning("\033[91mAucune métrique à envoyer.\033[0m")
     except Exception as e:
-        logger.error(f"\033[91mErreur lors de l'envoi des métriques vers Elasticsearch : {e}\033[0m")
+        logger.error(
+            f"\033[91mErreur lors de l'envoi des métriques vers Elasticsearch : {e}\033[0m"
+        )

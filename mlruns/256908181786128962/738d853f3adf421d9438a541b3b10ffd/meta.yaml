@@ -1,8 +1,9 @@
 artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/738d853f3adf421d9438a541b3b10ffd/artifacts
+deleted_time: 1740550454954
 end_time: 1740539970457
 entry_point_name: ''
 experiment_id: '256908181786128962'
-lifecycle_stage: active
+lifecycle_stage: deleted
 run_id: 738d853f3adf421d9438a541b3b10ffd
 run_name: lucky-falcon-851
 run_uuid: 738d853f3adf421d9438a541b3b10ffd

@@ -115,16 +115,22 @@ def evaluate_model(model, X_test, y_test):
     mlflow.log_metrics(metrics)
     log_metrics_to_es(metrics)
 
+    # Save artifacts to a writable directory
+    artifact_dir = "/tmp/mlruns"
+    os.makedirs(artifact_dir, exist_ok=True)
+
     # Generate and save ROC curve
+    roc_curve_path = os.path.join(artifact_dir, "roc_curve.png")
     plot_roc_curve(y_test, y_pred_proba)
-    mlflow.log_artifact("roc_curve.png")
+    mlflow.log_artifact(roc_curve_path)
 
     # Generate and save confusion matrix
+    confusion_matrix_path = os.path.join(artifact_dir, "confusion_matrix.png")
     plot_confusion_matrix(y_test, y_pred)
-    mlflow.log_artifact("confusion_matrix.png")
+    mlflow.log_artifact(confusion_matrix_path)
 
     # Save classification report
-    report_path = "classification_report.txt"
+    report_path = os.path.join(artifact_dir, "classification_report.txt")
     report = classification_report(y_test, y_pred)
     with open(report_path, "w") as f:
         f.write(report)
@@ -134,7 +140,6 @@ def evaluate_model(model, X_test, y_test):
     logger.info(report)
 
     return metrics
-
 # Function to promote model to a stage
 def promote_model(model_name, stage, accuracy):
     client = MlflowClient()

@@ -8,7 +8,7 @@ on:
 
 env:
   MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"
-  MLFLOW_ARTIFACT_ROOT: "/home/runner/work/salma-labidi-ds4-ml_project/salma-labidi-ds4-ml_project/mlruns"
+  MLFLOW_ARTIFACTS_DESTINATION: "/home/runner/work/salma-labidi-ds4-ml_project/salma-labidi-ds4-ml_project/mlruns"
   ELASTICSEARCH_HOST: "localhost"
 
 jobs:
@@ -47,8 +47,15 @@ jobs:
 
       - name: Create MLflow artifact directory
         run: |
-          mkdir -p $MLFLOW_ARTIFACT_ROOT
-          chmod 777 $MLFLOW_ARTIFACT_ROOT
+          mkdir -p $MLFLOW_ARTIFACTS_DESTINATION
+          chmod 777 $MLFLOW_ARTIFACTS_DESTINATION
+
+      - name: Debug artifact directory
+        run: |
+          echo "MLflow artifact directory: $MLFLOW_ARTIFACTS_DESTINATION"
+          ls -ld $MLFLOW_ARTIFACTS_DESTINATION
+          touch $MLFLOW_ARTIFACTS_DESTINATION/testfile
+          rm $MLFLOW_ARTIFACTS_DESTINATION/testfile
 
       - name: Start MLflow server
         run: |
@@ -67,4 +74,4 @@ jobs:
       - name: Debug MLflow directory
         run: |
           echo "Contenu du répertoire mlruns :"
-          ls -l $MLFLOW_ARTIFACT_ROOT
+          ls -l $MLFLOW_ARTIFACTS_DESTINATION

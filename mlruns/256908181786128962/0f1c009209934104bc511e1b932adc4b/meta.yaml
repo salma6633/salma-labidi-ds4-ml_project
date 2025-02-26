@@ -1,0 +1,15 @@
+artifact_uri: file:///home/salma/salma-labidi-ds4-ml_project/mlruns/256908181786128962/0f1c009209934104bc511e1b932adc4b/artifacts
+end_time: 1740540423415
+entry_point_name: ''
+experiment_id: '256908181786128962'
+lifecycle_stage: active
+run_id: 0f1c009209934104bc511e1b932adc4b
+run_name: bright-falcon-158
+run_uuid: 0f1c009209934104bc511e1b932adc4b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1740540394890
+status: 4
+tags: []
+user_id: runner

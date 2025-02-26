@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"  # Remplacez par votre URL Ngrok
+  MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"  # Replace with your Ngrok URL
   ELASTICSEARCH_HOST: "localhost"
 
 jobs:
@@ -44,11 +44,10 @@ jobs:
           pip install -r requirements.txt
           pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
 
-      - name: Clean MLflow directory
+      - name: Create and set permissions for mlruns directory
         run: |
-          rm -rf mlruns/*
           mkdir -p mlruns
-          chmod 755 mlruns
+          chmod 777 mlruns
 
       - name: Check MLflow directory
         run: |

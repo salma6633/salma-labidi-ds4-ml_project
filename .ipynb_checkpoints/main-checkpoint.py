@@ -25,6 +25,7 @@ import time
 from elasticsearch import Elasticsearch
 import logging
 from datetime import datetime
+import os
 
 # Connexion à Elasticsearch
 es = Elasticsearch([{"scheme": "http", "host": "localhost", "port": 9200}])
@@ -43,7 +44,8 @@ if not es.indices.exists(index=index_name):
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
+# Set the MLflow tracking URI to the local mlruns directory
+mlflow.set_tracking_uri("file:///home/runner/work/salma-labidi-ds4-ml_project/salma-labidi-ds4-ml_project/mlruns")
 # Fonction pour envoyer les logs à Elasticsearch
 def log_metrics_to_es(metrics):
     try:

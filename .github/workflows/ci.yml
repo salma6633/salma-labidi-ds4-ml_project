@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  MLFLOW_TRACKING_URI: "http://localhost:5000"
+  MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"  # Remplacez par votre URL Ngrok
   ELASTICSEARCH_HOST: "localhost"
 
 jobs:
@@ -61,16 +61,6 @@ jobs:
       - name: Create mlflow-metrics index
         run: |
           curl -X PUT "http://localhost:9200/mlflow-metrics"
-
-      - name: Start MLflow server
-        run: |
-          source venv/bin/activate
-          mlflow ui --host 0.0.0.0 --port 5000 &
-          sleep 10  # Wait for the server to start
-
-      - name: Check MLflow server status
-        run: |
-          curl -I http://localhost:5000
 
       - name: Run linter (Black)
         run: |

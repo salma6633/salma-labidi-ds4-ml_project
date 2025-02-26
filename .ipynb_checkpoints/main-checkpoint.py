@@ -124,22 +124,22 @@ def evaluate_model(model, X_test, y_test):
     log_metrics_to_es(metrics)
 
     # Generate and save ROC curve
-    roc_curve_path = "roc_curve.png"
-    plot_roc_curve(y_test, y_pred_proba)
+   # roc_curve_path = "roc_curve.png"
+  #  plot_roc_curve(y_test, y_pred_proba)
 
-    if os.access(os.getcwd(), os.W_OK):  # Check if write permission exists
-        mlflow.log_artifact(roc_curve_path)
-    else:
-        print(f"Skipping ROC curve logging due to permission issues: {roc_curve_path}")
+  #  if os.access(os.getcwd(), os.W_OK):  # Check if write permission exists
+   #     mlflow.log_artifact(roc_curve_path)
+  #  else:
+   #     print(f"Skipping ROC curve logging due to permission issues: {roc_curve_path}")
 
     # Generate and save confusion matrix
-    confusion_matrix_path = "confusion_matrix.png"
-    plot_confusion_matrix(y_test, y_pred)
+   # confusion_matrix_path = "confusion_matrix.png"
+   # plot_confusion_matrix(y_test, y_pred)
 
-    if os.access(os.getcwd(), os.W_OK):
-        mlflow.log_artifact(confusion_matrix_path)
-    else:
-        print(f"Skipping confusion matrix logging due to permission issues: {confusion_matrix_path}")
+   # if os.access(os.getcwd(), os.W_OK):
+   #     mlflow.log_artifact(confusion_matrix_path)
+  #  else:
+   #     print(f"Skipping confusion matrix logging due to permission issues: {confusion_matrix_path}")
 
     # Save classification report
     report_path = "classification_report.txt"
@@ -147,12 +147,12 @@ def evaluate_model(model, X_test, y_test):
     with open(report_path, "w") as f:
         f.write(report)
 
-    if os.access(os.getcwd(), os.W_OK):
-        mlflow.log_artifact(report_path)
-    else:
-        print(f"Skipping classification report logging due to permission issues: {report_path}")
+    #if os.access(os.getcwd(), os.W_OK):
+    #    mlflow.log_artifact(report_path)
+   # else:
+    #    print(f"Skipping classification report logging due to permission issues: {report_path}")
 
-    print("\033[94mRapport de classification :\033[0m")
+   # print("\033[94mRapport de classification :\033[0m")
     print(report)
 
     return metrics

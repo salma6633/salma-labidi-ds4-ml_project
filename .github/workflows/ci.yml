@@ -1,3 +1,4 @@
+
 name: CI/CD Pipeline
 
 on:
@@ -7,7 +8,7 @@ on:
     branches: [ main ]
 
 env:
-  MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"  # Replace with your Ngrok URL
+  MLFLOW_TRACKING_URI: "https://1403-196-229-57-11.ngrok-free.app"
   ELASTICSEARCH_HOST: "localhost"
 
 jobs:
@@ -43,46 +44,46 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
-
-      - name: Create and set permissions for mlruns directory
+      - name: Clean MLflow directory
         run: |
+          rm -rf mlruns/*
           mkdir -p mlruns
-          chmod 777 mlruns
-
+          chmod 755 mlruns
       - name: Check MLflow directory
         run: |
           ls -l mlruns
-
       - name: Check Elasticsearch connection
         run: |
           curl -X GET "http://localhost:9200"
-
       - name: Create mlflow-metrics index
         run: |
           curl -X PUT "http://localhost:9200/mlflow-metrics"
-
+      - name: Start MLflow server
+        run: |
+          source venv/bin/activate
+          mlflow ui --host 0.0.0.0 --port 5000 &
+          sleep 10  # Wait for the server to start
+      - name: Check MLflow server status
+        run: |
+          curl -I http://localhost:5000
       - name: Run linter (Black)
         run: |
           source venv/bin/activate
           black .
-
       - name: Run static type checking (Mypy)
         run: |
           source venv/bin/activate
           mypy --ignore-missing-imports --exclude venv .
-
       - name: Run unit tests
         env:
           MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
         run: |
           source venv/bin/activate
           pytest --maxfail=1 --disable-warnings -v
-
       - name: Set MLflow experiment to ExperimentFinal
         run: |
           source venv/bin/activate
           mlflow experiments create --experiment-name ExperimentFinal || true
-
       - name: Run all steps
         env:
           MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
@@ -90,7 +91,6 @@ jobs:
         run: |
           source venv/bin/activate
           python main.py --run-all --data data_churn.csv
-
       - name: Debug MLflow directory
         run: |
           echo "Contenu du répertoire mlruns :"
@@ -99,8 +99,11 @@ jobs:
           ls -l mlruns/models
           echo "Contenu du répertoire mlruns/models/CustomerChurnModel :"
           ls -l mlruns/models/CustomerChurnModel
-
       - name: Check MLflow meta.yaml
         run: |
           cat mlruns/models/CustomerChurnModel/meta.yaml
-
+      - name: Upload mlruns directory as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlruns
+          path: mlruns/

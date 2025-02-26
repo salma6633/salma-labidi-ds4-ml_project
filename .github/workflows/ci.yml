@@ -114,3 +114,9 @@ jobs:
       - name: Check MLflow meta.yaml
         run: |
           cat mlruns/models/CustomerChurnModel/meta.yaml
+
+      - name: Upload mlruns directory as artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: mlruns
+          path: mlruns/

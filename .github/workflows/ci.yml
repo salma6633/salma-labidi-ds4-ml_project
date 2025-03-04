@@ -46,7 +46,7 @@ jobs:
         run: sleep 10
 
       - name: Check MLflow server status
-        run: curl -I http://localhost:5000
+        run: curl -I http://mlflow-container:5000
 
       - name: Install dependencies
         run: |

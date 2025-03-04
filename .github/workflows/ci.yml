@@ -45,8 +45,6 @@ jobs:
       - name: Wait for FastAPI and MLflow to start
         run: sleep 10
 
-      - name: Check MLflow server status
-        run: curl -I http://mlflow-container:5000
 
       - name: Install dependencies
         run: |

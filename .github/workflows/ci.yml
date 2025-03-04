@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  MLFLOW_TRACKING_URI: "http://mlflow:5000"
+  MLFLOW_TRACKING_URI: "http://mlflow:5001"
   ELASTICSEARCH_HOST: "http://localhost:9200"
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3  # Use same version as local
         ports:
           - 9200:9200
         env:
@@ -30,21 +30,32 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
+      mlflow:
+        image: salma6633/salma_labidi_4ds4_mlops:latest
+        ports:
+          - 5001:5000
+        env:
+          MLFLOW_TRACKING_URI: "http://mlflow:5001"
+        options: >-
+          --health-cmd "curl -f http://localhost:5000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker for FastAPI and MLflow
+      - name: Set up Docker for FastAPI
         run: |
           docker network create mlflow_network
-          docker run -d --name fastapi-mlflow-container --network mlflow_network -p 8000:8000 -p 5000:5000 \
-            -v ${{ github.workspace }}/mlruns:/mlflow \
-            -e MLFLOW_TRACKING_URI=http://mlflow:5000 \
+          docker run -d --name fastapi-container --network mlflow_network -p 8000:8000 \
+            -e MLFLOW_TRACKING_URI=http://mlflow:5001 \
             -e ELASTICSEARCH_HOST=${{ env.ELASTICSEARCH_HOST }} \
             salma6633/salma_labidi_4ds4_mlops
-      - name: Wait for FastAPI and MLflow to start
-        run: sleep 10
-
+          
+      - name: Wait for services to start
+        run: sleep 15
 
       - name: Install dependencies
         run: |
@@ -53,14 +64,17 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
+
       - name: Run tests
         run: |
           source venv/bin/activate
           pytest --maxfail=1 --disable-warnings -v
+
       - name: Train model and log to MLflow
         run: |
           source venv/bin/activate
           python main.py --run-all --data data_churn.csv
+
       - name: Upload mlruns directory as artifact
         uses: actions/upload-artifact@v4
         with:

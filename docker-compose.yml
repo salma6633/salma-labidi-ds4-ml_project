@@ -24,6 +24,18 @@ services:
     networks:
       - monitoring
 
+  mlflow:
+    image: salma6633/salma_labidi_4ds4_mlops:latest  # Ensure you're using the correct MLflow image
+    container_name: mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    ports:
+      - "5001:5000"
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
 networks:
   monitoring:
     driver: bridge

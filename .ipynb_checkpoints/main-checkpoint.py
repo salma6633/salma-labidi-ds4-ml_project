@@ -206,7 +206,7 @@ def load_model(filepath="customer_churn_model.pkl"):
 
 # Fonction pour déplacer automatiquement le modèle vers un stage
 def move_model_to_stage_automatically(model_name, accuracy):
-    if accuracy > 0.93:
+    if accuracy > 0.92:
         promote_model(model_name, "Production", accuracy)
     elif accuracy > 0.90:
         promote_model(model_name, "Staging", accuracy)

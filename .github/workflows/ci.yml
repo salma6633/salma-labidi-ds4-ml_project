@@ -2,22 +2,20 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   pull_request:
-    branches:
-      - main
+    branches: [ main ]
 
 env:
-  MLFLOW_TRACKING_URI: "http://mlflow:5001"
-  ELASTICSEARCH_HOST: "http://localhost:9200"
+  MLFLOW_TRACKING_URI: "http://localhost:5000"
+  ELASTICSEARCH_HOST: "localhost"
 
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
     services:
       elasticsearch:
-        image: docker.elastic.co/elasticsearch/elasticsearch:8.5.3  # Use same version as local
+        image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
         ports:
           - 9200:9200
         env:
@@ -29,33 +27,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
-
-      mlflow:
-        image: salma6633/salma_labidi_4ds4_mlops:latest
-        ports:
-          - 5001:5000
-        env:
-          MLFLOW_TRACKING_URI: "http://mlflow:5001"
-        options: >-
-          --health-cmd "curl -f http://localhost:5000/ || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker for FastAPI
-        run: |
-          docker network create mlflow_network
-          docker run -d --name fastapi-container --network mlflow_network -p 8000:8000 \
-            -e MLFLOW_TRACKING_URI=http://mlflow:5001 \
-            -e ELASTICSEARCH_HOST=${{ env.ELASTICSEARCH_HOST }} \
-            salma6633/salma_labidi_4ds4_mlops
-          
-      - name: Wait for services to start
-        run: sleep 15
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -64,60 +43,66 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
-
-      - name: Run tests
+      - name: Clean MLflow directory
+        run: |
+          rm -rf mlruns/*
+          mkdir -p mlruns
+          chmod 755 mlruns
+      - name: Check MLflow directory
+        run: |
+          ls -l mlruns
+      - name: Check Elasticsearch connection
+        run: |
+          curl -X GET "http://localhost:9200"
+      - name: Create mlflow-metrics index
+        run: |
+          curl -X PUT "http://localhost:9200/mlflow-metrics"
+      - name: Start MLflow server
+        run: |
+          source venv/bin/activate
+          mlflow ui --host 0.0.0.0 --port 5000 &
+          sleep 10  # Wait for the server to start
+      - name: Check MLflow server status
+        run: |
+          curl -I http://localhost:5000
+      - name: Run linter (Black)
+        run: |
+          source venv/bin/activate
+          black .
+      - name: Run static type checking (Mypy)
+        run: |
+          source venv/bin/activate
+          mypy --ignore-missing-imports --exclude venv .
+      - name: Run unit tests
+        env:
+          MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
         run: |
           source venv/bin/activate
           pytest --maxfail=1 --disable-warnings -v
-
-      - name: Train model and log to MLflow
+      - name: Set MLflow experiment to ExperimentFinal
+        run: |
+          source venv/bin/activate
+          mlflow experiments create --experiment-name ExperimentFinal || true
+      - name: Run all steps
+        env:
+          MLFLOW_TRACKING_URI: ${{ env.MLFLOW_TRACKING_URI }}
+          ELASTICSEARCH_HOST: ${{ env.ELASTICSEARCH_HOST }}
         run: |
           source venv/bin/activate
           python main.py --run-all --data data_churn.csv
-
+      - name: Debug MLflow directory
+        run: |
+          echo "Contenu du répertoire mlruns :"
+          ls -l mlruns
+          echo "Contenu du répertoire mlruns/models :"
+          ls -l mlruns/models
+          echo "Contenu du répertoire mlruns/models/CustomerChurnModel :"
+          ls -l mlruns/models/CustomerChurnModel
+      - name: Check MLflow meta.yaml
+        run: |
+          cat mlruns/models/CustomerChurnModel/meta.yaml
       - name: Upload mlruns directory as artifact
         uses: actions/upload-artifact@v4
         with:
           name: mlruns
           path: mlruns/
-
-  build-and-push-docker:
-    needs: build-test-deploy
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} .
-
-      - name: Push Docker image
-        run: |
-          docker push ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
-          docker tag ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} ${{ secrets.DOCKER_IMAGE }}:latest
-          docker push ${{ secrets.DOCKER_IMAGE }}:latest
-
-  deploy:
-    needs: build-and-push-docker
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKER_IMAGE }}:latest
-            docker stop farmwise || true
-            docker rm farmwise || true
-            docker run -d --name farmwise -p 8000:8000 ${{ secrets.DOCKER_IMAGE }}:latest

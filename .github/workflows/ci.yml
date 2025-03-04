@@ -41,7 +41,7 @@ jobs:
             -v ${{ github.workspace }}/mlruns:/mlflow \
             -e MLFLOW_TRACKING_URI=http://0.0.0.0:5000 \
             -e ELASTICSEARCH_HOST=${{ env.ELASTICSEARCH_HOST }} \
-            your-dockerhub-username/mlflow:latest mlflow server --host 0.0.0.0 --port 5000
+            salma6633/salma_labidi_4ds4_mlops:latest mlflow server --host 0.0.0.0 --port 5000
 
       - name: Wait for MLflow to start
         run: sleep 10

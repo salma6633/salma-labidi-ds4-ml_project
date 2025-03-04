@@ -41,7 +41,7 @@ jobs:
             -v ${{ github.workspace }}/mlruns:/mlflow \
             -e MLFLOW_TRACKING_URI=http://mlflow:5000 \
             -e ELASTICSEARCH_HOST=${{ env.ELASTICSEARCH_HOST }} \
-            salma6633/salma_labidi_4ds4_mlops_with_fastapi_mlflow
+            salma6633/salma_labidi_4ds4_mlops
       - name: Wait for FastAPI and MLflow to start
         run: sleep 10
 

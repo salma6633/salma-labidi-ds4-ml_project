@@ -123,14 +123,14 @@ def evaluate_model(model, X_test, y_test):
     log_metrics_to_es(metrics)
 
     plot_roc_curve(y_test, y_pred_proba)
-    mlflow.log_artifact("roc_curve.png")
+    #mlflow.log_artifact("roc_curve.png")
     plot_confusion_matrix(y_test, y_pred)
-    mlflow.log_artifact("confusion_matrix.png")
+    #mlflow.log_artifact("confusion_matrix.png")
 
     report = classification_report(y_test, y_pred)
     with open("classification_report.txt", "w") as f:
         f.write(report)
-    mlflow.log_artifact("classification_report.txt")
+    #mlflow.log_artifact("classification_report.txt")
 
     print("\033[94mRapport de classification :\033[0m")
     print(report)

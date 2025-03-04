@@ -1,29 +1,20 @@
-# Utiliser une image légère de Python
-FROM python:3.12-slim
+# Use the existing image as a base image
+FROM salma6633/salma_labidi_4ds4_mlops
 
-# Mise à jour des paquets et installation des outils nécessaires
-RUN apt-get update && apt-get install -y build-essential
-
-# Définir le répertoire de travail
+# Set the working directory to /app
 WORKDIR /app
 
-# Copier tous les fichiers du projet dans le conteneur
-COPY . .
+# Install FastAPI and Uvicorn
+RUN pip install fastapi uvicorn
 
-# Installer les dépendances
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Exposer le port pour FastAPI
-EXPOSE 8000  
-
-# Démarrer l'API FastAPI
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Install MLflow separately
+# Install MLflow
 RUN pip install mlflow
 
-# Expose MLflow UI port
-EXPOSE 5000
+# Expose the ports for FastAPI and MLflow
+EXPOSE 8000 5000
 
-# Command to start MLflow server
-CMD ["mlflow", "server", "--host", "0.0.0.0", "--port", "5000", "--backend-store-uri", "sqlite:///mlflow.db", "--default-artifact-root", "/app/mlruns"]
+# Copy all your project files into the container
+COPY . .
+
+# Command to run both FastAPI and MLflow server
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port 8000 & mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /app/mlruns"]

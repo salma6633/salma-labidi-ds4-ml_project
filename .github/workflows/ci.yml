@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  MLFLOW_TRACKING_URI: "http://localhost:5000"
+  MLFLOW_TRACKING_URI: "http://mlflow:5000"
   ELASTICSEARCH_HOST: "http://localhost:9200"
 
 jobs:
@@ -34,16 +34,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker for MLflow
+      - name: Set up Docker for FastAPI and MLflow
         run: |
           docker network create mlflow_network
-          docker run -d --name mlflow-server --network mlflow_network -p 5000:5000 \
+          docker run -d --name fastapi-mlflow-container --network mlflow_network -p 8000:8000 -p 5000:5000 \
             -v ${{ github.workspace }}/mlruns:/mlflow \
-            -e MLFLOW_TRACKING_URI=http://0.0.0.0:5000 \
+            -e MLFLOW_TRACKING_URI=http://mlflow:5000 \
             -e ELASTICSEARCH_HOST=${{ env.ELASTICSEARCH_HOST }} \
-            salma6633/salma_labidi_4ds4_mlops:latest mlflow server --host 0.0.0.0 --port 5000
-
-      - name: Wait for MLflow to start
+            salma6633/salma_labidi_4ds4_mlops_with_fastapi_mlflow
+      - name: Wait for FastAPI and MLflow to start
         run: sleep 10
 
       - name: Check MLflow server status
@@ -56,17 +55,14 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
           pip install xgboost lifelines pytest black mypy joblib mlflow scikit-learn elasticsearch
-
       - name: Run tests
         run: |
           source venv/bin/activate
           pytest --maxfail=1 --disable-warnings -v
-
       - name: Train model and log to MLflow
         run: |
           source venv/bin/activate
           python main.py --run-all --data data_churn.csv
-
       - name: Upload mlruns directory as artifact
         uses: actions/upload-artifact@v4
         with:
@@ -90,7 +86,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }} .
-      
+
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}

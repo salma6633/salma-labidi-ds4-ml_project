@@ -1,0 +1,68 @@
+/* Result page styling */
+.result-container {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 70%;
+    max-width: 800px;
+    margin: 30px auto;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+.result-content, .error-content {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.result-content p, .error-content p {
+    font-size: 18px;
+    color: #555;
+}
+
+.result-content p strong {
+    font-weight: bold;
+}
+
+.result-content {
+    background-color: #e8f5e9;
+}
+
+.result-content p {
+    color: #388e3c;
+}
+
+.error-content {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+}
+
+a.back-button {
+    display: inline-block;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+a.back-button:hover {
+    background-color: #45a049;
+}
+
+/* Additional styles for the prediction message */
+.result-content p.high-probability {
+    color: #e53935;
+}
+
+.result-content p.low-probability {
+    color: #388e3c;
+}

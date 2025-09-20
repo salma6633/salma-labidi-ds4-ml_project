@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <div class="form-container">
+        <h1>Customer Churn Prediction</h1>
+        <form action="/predict" method="post">
+            <div class="form-row">
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Account_length">Account Length:</label>
+                        <input type="text" id="Account_length" name="Account_length">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="International_plan">International Plan (0=No, 1=Yes):</label>
+                        <input type="text" id="International_plan" name="International_plan">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Number_vmail_messages">Number of Voicemail Messages:</label>
+                        <input type="text" id="Number_vmail_messages" name="Number_vmail_messages">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_day_calls">Total Day Calls:</label>
+                        <input type="text" id="Total_day_calls" name="Total_day_calls">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_day_charge">Total Day Charge:</label>
+                        <input type="text" id="Total_day_charge" name="Total_day_charge">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_eve_calls">Total Evening Calls:</label>
+                        <input type="text" id="Total_eve_calls" name="Total_eve_calls">
+                    </div>
+                </div>
+
+                <div class="form-column">
+                    <div class="form-group">
+                        <label for="Total_eve_charge">Total Evening Charge:</label>
+                        <input type="text" id="Total_eve_charge" name="Total_eve_charge">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_night_calls">Total Night Calls:</label>
+                        <input type="text" id="Total_night_calls" name="Total_night_calls">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_night_charge">Total Night Charge:</label>
+                        <input type="text" id="Total_night_charge" name="Total_night_charge">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_intl_calls">Total International Calls:</label>
+                        <input type="text" id="Total_intl_calls" name="Total_intl_calls">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Total_intl_charge">Total International Charge:</label>
+                        <input type="text" id="Total_intl_charge" name="Total_intl_charge">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Customer_service_calls">Customer Service Calls:</label>
+                        <input type="text" id="Customer_service_calls" name="Customer_service_calls">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="state">State:</label>
+                        <select id="state" name="state">
+                            <option value="KS">KS</option>
+                            <option value="OH">OH</option>
+                            <option value="NJ">NJ</option>
+                            <option value="OK">OK</option>
+                            <option value="AL">AL</option>
+                            <option value="MA">MA</option>
+                            <option value="MO">MO</option>
+                            <option value="WV">WV</option>
+                            <option value="RI">RI</option>
+                            <option value="IA">IA</option>
+                            <option value="MT">MT</option>
+                            <option value="ID">ID</option>
+                            <option value="VT">VT</option>
+                            <option value="VA">VA</option>
+                            <option value="TX">TX</option>
+                            <option value="FL">FL</option>
+                            <option value="CO">CO</option>
+                            <option value="AZ">AZ</option>
+                            <option value="NE">NE</option>
+                            <option value="WY">WY</option>
+                            <option value="IL">IL</option>
+                            <option value="NH">NH</option>
+                            <option value="LA">LA</option>
+                            <option value="GA">GA</option>
+                            <option value="AK">AK</option>
+                            <option value="MD">MD</option>
+                            <option value="AR">AR</option>
+                            <option value="WI">WI</option>
+                            <option value="OR">OR</option>
+                            <option value="DE">DE</option>
+                            <option value="IN">IN</option>
+                            <option value="UT">UT</option>
+                            <option value="CA">CA</option>
+                            <option value="SD">SD</option>
+                            <option value="NC">NC</option>
+                            <option value="WA">WA</option>
+                            <option value="MN">MN</option>
+                            <option value="NM">NM</option>
+                            <option value="NV">NV</option>
+                            <option value="DC">DC</option>
+                            <option value="NY">NY</option>
+                            <option value="KY">KY</option>
+                            <option value="ME">ME</option>
+                            <option value="MS">MS</option>
+                            <option value="MI">MI</option>
+                            <option value="SC">SC</option>
+                            <option value="TN">TN</option>
+                            <option value="PA">PA</option>
+                            <option value="HI">HI</option>
+                            <option value="ND">ND</option>
+                            <option value="CT">CT</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Submit">
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles_p.css') }}">
+</head>
+<body>
+    <div class="result-container">
+        <h1>Prediction Result</h1>
+
+        {% if prediction is not none %}
+        <div class="result-content">
+            {% if prediction == 1 %}
+            <p><strong>Prediction: </strong>1 (This customer has a high probability to churn)</p>
+            {% else %}
+            <p><strong>Prediction: </strong>0 (This customer has a low probability to churn)</p>
+            {% endif %}
+            
+            <p><strong>Churn Probability: </strong>{{ churn_probability }}</p>
+        </div>
+        {% elif error %}
+        <div class="error-content">
+            <p><strong>Error: </strong>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <a href="/" class="back-button">Go Back to Form</a>
+    </div>
+</body>
+</html>
